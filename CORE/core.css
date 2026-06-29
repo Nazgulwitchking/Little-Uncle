@@ -1,0 +1,374 @@
+:root {
+    --carbon-bg: #0d0d0e;
+    --carbon-card: #141416;
+    --border-glow: #262629;
+    --text-pure: #ffffff;
+    --text-muted: #8e8e93;
+    
+    --space-purple: #6366f1;
+    --space-purple-glow: #a5b4fc;
+    --cyber-cyan: #06b6d4;
+    
+    --status-bg: #141416;
+    --status-border: #262629;
+    --status-text: #ffffff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--carbon-bg);
+    color: var(--text-pure);
+    margin: 0;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* CONTAINER-ANPASSUNG FÜR DEIN HTML */
+.app-container {
+    width: 100%;
+    max-width: 480px;
+    box-sizing: border-box;
+}
+
+/* PAGES / TAB CONTROL */
+.tab-content, .sub-tab-content {
+    display: none;
+}
+.tab-content.active, .sub-tab-content.active {
+    display: block;
+}
+
+/* SYMMETRISCHES HEADER-LAYOUT (PERFEKTE DREITEILUNG) */
+header, .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 35px;
+    margin-top: 20px;
+    width: 100%;
+    border-bottom: none !important;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+/* Identische feste Breite links und rechts erzwingt mathematische Zentrierung der Mitte */
+.header-left, .header-right {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Der Titel bleibt unverrückbar in der Mitte zentriert */
+.header-title-container {
+    flex-grow: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+header h1, .app-header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+header p, .app-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    margin: 4px 0 0 0;
+}
+
+/* HEADER-BUTTONS STYLING (INFO & ZAHNRAD) */
+.header-icon-btn {
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    transition: transform 0.2s ease;
+}
+
+.header-icon-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Spezifische Drehung nur für das Zahnrad bei Hover */
+#settings-btn:hover {
+    transform: rotate(45deg);
+}
+
+.header-icon-btn svg {
+    stroke: var(--text-muted);
+    width: 24px;
+    height: 24px;
+    transition: stroke 0.2s;
+}
+
+.header-icon-btn:hover svg {
+    stroke: var(--text-pure);
+}
+
+/* STEUERUNG DER SICHTBARKEIT (Wunsch-Logik ohne Layout-Verschiebung) */
+#info-btn {
+    visibility: hidden; /* Auf dem Homescreen komplett unsichtbar, reserviert aber den Platz */
+}
+
+#settings-btn {
+    visibility: visible; /* Immer sichtbar */
+}
+
+/* GROSSE WIDGETS FÜR DAS DASHBOARD */
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.dash-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; 
+    background-color: var(--carbon-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 20px; 
+    padding: 30px 24px;  
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.dash-tile:hover {
+    transform: translateY(-2px);
+    border-color: var(--space-purple);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+}
+
+.dash-tile:active {
+    transform: scale(0.98);
+}
+
+.tile-icon { 
+    font-size: 36px; 
+    margin-bottom: 14px; 
+}
+
+.tile-title { 
+    font-size: 20px; 
+    font-weight: 700; 
+    margin: 0 0 8px 0; 
+    color: var(--text-pure);
+}
+
+.tile-desc { 
+    font-size: 13.5px; 
+    color: var(--text-muted); 
+    line-height: 1.4; 
+    margin: 0;
+}
+
+/* NAVIGATION & BUTTONS */
+.back-btn {
+    background: transparent;
+    border: 1px solid var(--border-glow);
+    color: var(--text-muted);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+.back-btn:hover { color: var(--text-pure); border-color: var(--text-muted); }
+
+.sub-nav, .main-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background-color: var(--carbon-card);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border-glow);
+}
+
+.sub-nav button, .nav-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.sub-nav button.active, .nav-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(6, 182, 212, 0.2)) !important;
+    color: var(--text-pure) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    font-weight: 600 !important;
+}
+
+/* APP CARDS & FORM DESIGN */
+.card, .app-card {
+    background-color: var(--carbon-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 18px;
+    padding: 24px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+.card h2, .app-card h2, .card h3, .app-card h3 { 
+    font-size: 19px; 
+    font-weight: 700; 
+    margin: 0 0 10px 0; 
+}
+
+.subtitle { color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0; }
+.form-group { margin-bottom: 18px; }
+label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: var(--text-muted); }
+
+/* SELECTION STANDARD-LOOKS */
+select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    font-size: 14px;
+    background-color: var(--carbon-bg);
+    color: var(--text-pure);
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+}
+select:focus { border-color: var(--space-purple); }
+
+/* BUTTON DESIGN UND BACKWARD-COMPATIBILITY FÜR ALLE BTNS */
+.btn, .skip-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--space-purple), #4f46e5) !important;
+    color: var(--text-pure) !important;
+    padding: 14px !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    transition: transform 0.1s;
+    text-align: center !important;
+    margin-bottom: 10px;
+}
+.btn:active, .skip-btn:active { transform: scale(0.98); }
+
+/* Zurück-Buttons am Ende von Seiten (Spezial-Überschreibung für schlichten Look) */
+.card + .btn, .tab-content > .btn {
+    background: transparent !important;
+    border: 1px solid var(--border-glow) !important;
+    color: var(--text-muted) !important;
+    box-shadow: none;
+}
+.card + .btn:hover, .tab-content > .btn:hover {
+    color: var(--text-pure) !important;
+    border-color: var(--text-muted) !important;
+}
+
+/* FEEDBACK- / ERGEBNISKARTEN / INFOS */
+.result-box, #feedbackCard, .feedback-card { 
+    padding: 22px; 
+    border-radius: 14px; 
+    background-color: var(--status-bg) !important; 
+    border: 1px solid var(--status-border) !important; 
+    color: var(--status-text) !important; 
+    margin-top: 20px;
+}
+
+.result-title, #res-card-title { font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; color: var(--space-purple-glow); }
+.result-grade, .result-value, #gradeOutput, #rechner-result-value { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; color: var(--text-pure); }
+.result-desc, #descOutput, #rechner-result-text { font-size: 14px; line-height: 1.5; }
+
+/* LINIEN-TRENNER IN DEN KARTEN */
+hr {
+    border: 0;
+    height: 1px;
+    background: var(--border-glow);
+    margin: 20px 0;
+}
+
+/* SETTINGS OVERLAY DESIGN */
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 13, 14, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.settings-overlay.active {
+    display: flex;
+}
+.settings-card {
+    background: var(--carbon-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    padding: 25px;
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.settings-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    background: linear-gradient(135deg, #a5b4fc, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.setting-group {
+    margin-bottom: 20px;
+}

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Uncle</title>
+    <link rel="icon" type="image/png" href="CORE/icon.png?v=2">
+    <link rel="apple-touch-icon" href="CORE/icon.png?v=2">
+    <meta name="theme-color" content="#7c3aed">
+    
+    <link rel="stylesheet" href="CORE/core.css?v=2">
+    
+    <style>
+        /* --- STYLES FÜR DAS UPDATE-POPUP --- */
+        .update-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100000;
+        }
+
+        .update-modal-content {
+            background-color: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        #update-modal-text {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .update-btn-ok {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .update-btn-ok:hover {
+            opacity: 0.9;
+        }
+
+        /* FLEXIBLER FIXED-SIZE HEADER CONTROLS */
+        header.app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            color: var(--text-pure, #ffffff);
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: opacity 0.2s;
+        }
+        .header-btn:hover {
+            opacity: 0.8;
+        }
+        .header-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        /* Platzhalter für die Symmetrie */
+        .header-placeholder {
+            width: 44px;
+            height: 44px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header class="app-header" style="display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100%; box-sizing: border-box; padding: 15px 20px;">
+            
+            <button id="info-btn" class="header-btn" onclick="toggleInfo()" aria-label="Informationen" style="visibility: hidden; flex-shrink: 0; background: none; border: none; color: white; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: currentColor;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+            </button>
+
+            <div id="info-placeholder" style="display: none !important;"></div>
+
+            <h1 id="main-app-title" style="margin: 0; font-size: 22px; text-align: center; flex-grow: 1; font-weight: 700; color: white;">Little Uncle</h1>
+
+            <button id="settings-btn" class="header-btn" onclick="toggleSettings(true)" aria-label="Einstellungen" style="flex-shrink: 0; background: none; border: none; color: white; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: currentColor;">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </button>
+        </header>
+
+        <div id="info-drawer" style="position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card-bg, #1e1e2e); border-right: 1px solid var(--space-border, #32324d); box-shadow: 5px 0 15px rgba(0,0,0,0.5); z-index: 99999; transition: left 0.3s ease; padding: 20px; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--cyber-cyan, #22d3ee); font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    Informationen
+                </h3>
+                <button onclick="toggleInfo(false)" style="background: none; border: none; color: var(--text-pure, #fff); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+            <p id="info-drawer-text" style="font-size: 14px; line-height: 1.6; color: var(--text-pure, #fff); margin: 0; text-align: left;"></p>
+        </div>
+
+        <div id="landing-page" class="tab-content active">
+            <div class="card">
+                <h2 id="landing-title">Willkommen bei Little Uncle</h2>
+                <p id="ios-hint" style="display:none; color: var(--space-purple-glow); line-height: 1.5;">
+                    <strong>Hinweis für iPhone:</strong> Tippe unten im Safari-Browser auf das Teilen-Symbol (Viereck mit Pfeil) und wähle <strong>"Zum Home-Bildschirm"</strong>, um diese App im echten Vollbildmodus zu nutzen.
+                </p>
+            </div>
+            <button id="installBtn" class="skip-btn" style="display: none; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px; width: 100%;">
+                App auf dem Handy installieren
+            </button>
+            <button class="btn" style="background: #27272a; margin-top: 10px;" onclick="switchToRealAppMode()">
+                Direkt zur App (Vorschau)
+            </button>
+        </div>
+
+        <div id="dashboard-page" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="dash-tile" onclick="openApp('klassen-page')">
+                    <div class="tile-icon">🏫</div>
+                    <div class="tile-title" id="dash-tile1-title">Klassen-Verteilung & Matcher</div>
+                    <div class="tile-desc" id="dash-tile1-desc">Berechne deine Chancen und finde deinen optimalen Matchpartner aus der Stufe.</div>
+                </div>
+                <div class="dash-tile" onclick="openApp('noten-page')">
+                    <div class="tile-icon">📊</div>
+                    <div class="tile-title" id="dash-tile2-title">Hessischer Noten-Rechner</div>
+                    <div class="tile-desc" id="dash-tile2-desc">Verwalte deine Fächer, berechne exakte Zeugnisnoten und plane Wunschergebnisse.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="klassen-page" class="tab-content">
+            <div class="sub-nav">
+                <button id="btn-sub-rechner" class="active" onclick="switchSubTab('rechner-page')">Wahrscheinlichkeits-Rechner</button>
+                <button id="btn-sub-match" onclick="switchSubTab('match-page')">Matchpartner Finder</button>
+            </div>
+
+            <div id="rechner-page" class="sub-tab-content active">
+                <div class="card">
+                    <h3>Klassen-Wahrscheinlichkeit</h3>
+                    <div class="form-group">
+                        <label>Mein Geschlecht:</label>
+                        <select id="meinGeschlecht"><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Meine aktuelle Klasse:</label>
+                        <select id="meineKlasse"><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                    </div>
+                    <hr style="border-color:rgba(255,255,255,0.05); margin:20px 0;">
+                    <div class="form-group">
+                        <label>Zielperson Geschlecht:</label>
+                        <select id="zielGeschlecht"><option value="F">Weiblich</option><option value="M">Männlich</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Zielperson aktuelle Klasse:</label>
+                        <select id="zielKlasse"><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mein 1. Wunschpartner (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="wunsch1_G" style="flex:1;"><option value="">Kein Wunsch</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="wunsch1_klasse" style="flex:1;"><option value="unbekannt">Klasse egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mein 2. Wunschpartner (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="wunsch2_G" style="flex:1;"><option value="">Kein Wunsch</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="wunsch2_klasse" style="flex:1;"><option value="unbekannt">Klasse egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Zielperson Freund 1 (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="clique1_G" style="flex:1;"><option value="">Kein Freund</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="clique1_klasse" style="flex:1;"><option value="unbekannt">Klasse egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Zielperson Freund 2 (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="clique2_G" style="flex:1;"><option value="">Kein Freund</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="clique2_klasse" style="flex:1;"><option value="unbekannt">Klasse egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background:var(--space-purple-glow); color:#000; font-weight:bold; text-align:center; margin-top:10px;" onclick="berechneRechner()">Berechnen</button>
+                    
+                    <div id="rechner-result-box" class="result-box">
+                        <div id="rechner-result-text">Die Wahrscheinlichkeit beträgt:</div>
+                        <div id="rechner-result-value" class="result-value">0.00%</div>
+                    </div>
+                </div>
+
+                <div id="rechner-simulator-box" class="card" style="display:none; border-color: var(--space-purple-glow);">
+                    <h3>Zukunft-Prognose (Simulation)</h3>
+                    <p id="rechner-simulator-content" style="line-height:1.6; color:var(--text-pure);"></p>
+                </div>
+            </div>
+
+            <div id="match-page" class="sub-tab-content">
+                <div class="card">
+                    <h3>Matchpartner Finder</h3>
+                    <div class="form-group">
+                        <label>Mein Geschlecht:</label>
+                        <select id="matchMeinG"><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Meine aktuelle Klasse:</label>
+                        <select id="matchMeineKlasse"><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                    </div>
+                    <hr style="border-color:rgba(255,255,255,0.05); margin:20px 0;">
+                    
+                    <div class="form-group">
+                        <label><strong>Vergleichsperson A</strong> Geschlecht & Klasse:</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="persA_G" style="flex:1;"><option value="F">Weiblich</option><option value="M">Männlich</option></select>
+                            <select id="persA_klasse" style="flex:1;"><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Person A - Bester Freund (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="persAClique_G" style="flex:1;"><option value="">Keiner</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="persAClique_klasse" style="flex:1;"><option value="unbekannt">Egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+                    <hr style="border-color:rgba(255,255,255,0.05); margin:20px 0;">
+
+                    <div class="form-group">
+                        <label><strong>Vergleichsperson B</strong> Geschlecht & Klasse:</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="persB_G" style="flex:1;"><option value="F">Weiblich</option><option value="M">Männlich</option></select>
+                            <select id="persB_klasse" style="flex:1;"><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Person B - Bester Freund (Geschlecht & Klasse):</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="persBClique_G" style="flex:1;"><option value="">Keiner</option><option value="M">Männlich</option><option value="F">Weiblich</option></select>
+                            <select id="persBClique_klasse" style="flex:1;"><option value="unbekannt">Egal</option><option value="a">10a</option><option value="b">10b</option><option value="c">10c</option><option value="d">10d</option><option value="e">10e</option></select>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background:var(--cyber-cyan); color:#000; font-weight:bold; text-align:center; margin-top:10px;" onclick="berechneMatchpartner()">Besten Matchpartner finden</button>
+
+                    <div id="match-result-box" class="result-box" style="background: rgba(34, 211, 238, 0.08); border-color: rgba(34, 211, 238, 0.3);">
+                        <div id="match-result-content" style="line-height:1.6; color:white; font-size:15px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" style="margin-top:10px; background:#18181b; text-align:center;" onclick="goBackToDashboard()">Zurück zum Dashboard</button>
+        </div>
+
+        <div id="noten-page" class="tab-content">
+            <div class="sub-nav">
+                <button id="btn-mittel" class="active" onclick="setStufe('mittel')">Mittelstufe (1-6)</button>
+                <button id="btn-ober" onclick="setStufe('ober')">Oberstufe (0-15)</button>
+            </div>
+            <div class="sub-nav">
+                <button id="btn-rechner" class="active" onclick="setModus('rechner')">Noten-Rechner</button>
+                <button id="btn-planer" onclick="setModus('planer')">Wunschnoten-Planer</button>
+            </div>
+
+            <div class="card">
+                <h3 id="noten-main-title">Der Noten-Rechner</h3>
+                <p id="noten-main-sub" style="color:var(--text-muted); font-size:14px; margin-top:-10px; margin-bottom:20px;">Berechne deine exakte hessische Zeugnisnote.</p>
+
+                <div class="form-group">
+                    <label>Fach-Typ:</label>
+                    <select id="fachTyp" onchange="anpassenFachfelder()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Mündliche Note / Allgemeinaussage:</label>
+                    <select id="noteMuendlich"></select>
+                </div>
+                <div class="form-group" id="arbeit1-group">
+                    <label id="arbeit1-label">1. Klassenarbeit:</label>
+                    <select id="noteArbeit1"></select>
+                </div>
+                <div class="form-group" id="arbeit2-group">
+                    <label id="arbeit2-label">2. Klassenarbeit:</label>
+                    <select id="noteArbeit2"></select>
+                </div>
+                <div class="form-group" id="vorher-group">
+                    <label>Letzte Zeugnisnote (für Pädagogische Tendenz bei x,5):</label>
+                    <select id="vorherigeNote"></select>
+                </div>
+                <div class="form-group" id="wunsch-group" style="display:none;">
+                    <label>Deine gewünschte Zeugnisnote:</label>
+                    <select id="wunschNote"></select>
+                </div>
+
+                <button class="btn" id="calcBtn" style="background:var(--cyber-cyan); color:#000; font-weight:bold; text-align:center; margin-top:10px;" onclick="fuehreBerechnungAus()">Note berechnen</button>
+            </div>
+
+            <div id="feedbackCard" class="card" style="display:none; background: var(--status-bg); border: 1px solid var(--status-border); text-align:center;">
+                <h3 id="res-card-title" style="margin-top:0; color:var(--text-pure); font-size:16px;">Errechnetes Zeugnis-Ergebnis</h3>
+                <div id="gradeOutput" style="font-size:32px; font-weight:900; margin:10px 0;">Note 2</div>
+                <p id="descOutput" style="font-size:14px; color:var(--text-pure); margin-bottom:0;"></p>
+                <p id="empfehlungOutput" style="font-size:13px; color:var(--text-muted); margin-top:10px; display:none;"></p>
+            </div>
+
+            <button class="btn" style="margin-top:10px; background:#18181b; text-align:center;" onclick="goBackToDashboard()">Zurück zum Dashboard</button>
+        </div>
+
+        <div id="settings-overlay" class="settings-overlay">
+            <div class="settings-card">
+                <h2>Einstellungen / Settings</h2>
+                
+                <div class="setting-group">
+                    <label for="settings-lang">Sprache / Language / 语言</label>
+                    <select id="settings-lang">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                        <option value="zh">中文 (Chinesisch)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="settings-region">Land / Region (Schulsystem)</label>
+                    <select id="settings-region">
+                        <option value="he">Deutschland (Hessen)</option>
+                        <option value="by">Deutschland (Bayern)</option>
+                        <option value="nrw">Deutschland (NRW)</option>
+                        <option value="int">International / Other</option>
+                    </select>
+                </div>
+
+                <div class="setting-group" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                    <button id="btn-manual-update" class="btn" style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; width: 100%; font-weight: bold;" onclick="checkForUpdatesManual()">Auf Updates überprüfen</button>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="btn" onclick="toggleSettings(false)">Speichern & Schließen</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="manual-update-popup" class="update-modal-overlay" style="display: none;">
+        <div class="update-modal-content">
+            <p id="update-modal-text">Suche nach Updates...</p>
+            <button id="update-modal-btn" class="update-btn-ok" style="display: none;">OK</button>
+        </div>
+    </div>
+
+    <script type="module" src="CORE/core.js"></script>
+</body>
+</html>
