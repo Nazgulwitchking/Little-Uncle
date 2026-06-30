@@ -747,3 +747,17 @@ function erweiterungLaden(ordnerName) {
 
 
 erweiterungLaden('Extension1');
+
+// Funktionen für das HTML sichtbar machen
+window.toggleInfo = toggleInfo;
+window.toggleSettings = toggleSettings;
+window.switchToRealAppMode = switchToRealAppMode;
+window.openApp = openApp;
+window.switchSubTab = switchSubTab;
+window.berechneRechner = berechneRechner;
+window.berechneMatchpartner = berechneMatchpartner;
+window.setStufe = setStufe;
+window.setModus = setModus;
+window.anpassenFachfelder = anpassenFachfelder;
+window.fuehreBerechnungAus = fuehreBerechnungAus;
+window.checkForUpdatesManual = checkForUpdatesManual;
