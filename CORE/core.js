@@ -889,7 +889,15 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 // ==========================================
 // MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
 // ==========================================
+// ==========================================
+// MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
+// =/=========================================
 window.checkForUpdatesManual = function() {
+    // FEHLER BEHOBEN: Elemente müssen erst aus dem DOM geholt werden!
+    const text = document.getElementById('update-text') || { style: {} };
+    const btn = document.getElementById('update-btn') || { style: {} };
+    const popup = document.getElementById('update-popup') || { style: {} };
+
     text.innerText = 'Suche nach Updates gestartet...';
     btn.style.display = 'none';
 
@@ -928,6 +936,7 @@ window.checkForUpdatesManual = function() {
         btn.onclick = () => { popup.style.display = 'none'; };
     }
 };
+
 
 // ==========================================
 // ERWEITERUNGS-SYSTEM
