@@ -1785,4 +1785,4 @@ window.setStufe = setStufe;
 window.setModus = setModus;
 window.anpassenFachfelder = anpassenFachfelder;
 window.fuehreBerechnungAus = fuehreBerechnungAus;
-window.checkForUpdatesManual = checkForUpdatesManual;
+
