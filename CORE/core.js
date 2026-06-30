@@ -1,3 +1,5 @@
+import { initStundenplan } from '../Extensions/Stundenplan/stundenplan.js';
+
 // ==========================================
 // PWA WEICHEN-STEUERUNG & INITIALISIERUNG
 // ==========================================
@@ -59,7 +61,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const iosHint = document.getElementById('ios-hint');
     const landing = document.getElementById('landing-page');
     const dash = document.getElementById('dashboard-page');
-
+    // Beim Start der App ausführen:
+    initStundenplan();
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
 

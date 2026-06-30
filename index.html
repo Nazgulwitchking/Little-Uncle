@@ -161,7 +161,56 @@
                     <div class="tile-title" id="dash-tile2-title">Hessischer Noten-Rechner</div>
                     <div class="tile-desc" id="dash-tile2-desc">Verwalte deine Fächer, berechne exakte Zeugnisnoten und plane Wunschergebnisse.</div>
                 </div>
+                <div class="dash-tile" onclick="openApp('stundenplan-page')">
+                    <div class="tile-icon">📅</div>
+                    <div class="tile-title" id="dash-tile3-title">Stundenplan & Planer</div>
+                    <div class="tile-desc" id="dash-tile3-desc">Dein persönlicher Plan mit lila-blauem Live-Highlight für heute.</div>
+                </div>
             </div>
+        </div>
+
+        <div id="stundenplan-page" class="tab-content">
+            <link rel="stylesheet" href="Extensions/Stundenplan/stundenplan.css">
+            <div class="timetable-wrapper">
+                <table class="timetable">
+                    <thead>
+                        <tr>
+                            <th id="day-1">Mo</th>
+                            <th id="day-2">Di</th>
+                            <th id="day-3">Mi</th>
+                            <th id="day-4">Do</th>
+                            <th id="day-5">Fr</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetable-body">
+                        </tbody>
+                </table>
+                
+                <button class="btn" style="margin-top: 10px; background: linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="saveTimetable()">
+                    💾 Stundenplan speichern
+                </button>
+
+                <div class="calendar-section" style="margin-top: 40px;">
+                    <div class="calendar-header">
+                        <h3 id="calendar-title" onclick="toggleCalendarView()">📅 Heute (Kompaktmodus)</h3>
+                        <button id="btn-calendar-view" class="tool-btn" onclick="toggleCalendarView()">📅 Ganzer Monat</button>
+                    </div>
+                    <div id="calendar-nav" class="calendar-nav" style="display: none;">
+                        <button onclick="changeMonth(-1)">◀</button>
+                        <span id="current-month-year"></span>
+                        <button onclick="changeMonth(1)">▶</button>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid compact"></div>
+                    <div id="calendar-event-form" class="event-form" style="margin-top: 15px;">
+                        <h4 id="selected-date-title">Eintrag für heute:</h4>
+                        <textarea id="calendar-event-input" placeholder="Hausaufgaben, Klausuren oder Termine eintragen..."></textarea>
+                        <button class="btn" style="background: #34d399; color: #111; margin-top: 8px;" onclick="saveCalendarEvent()">
+                            📌 Eintrag speichern
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" style="margin-top:10px; background:#18181b; text-align:center;" onclick="goBackToDashboard()">Zurück zum Dashboard</button>
         </div>
 
         <div id="klassen-page" class="tab-content">
@@ -321,7 +370,7 @@
                     <select id="noteArbeit2"></select>
                 </div>
                 <div class="form-group" id="vorher-group">
-                    <label>Letzte Zeugnisnote (für Pädagogische Tendenz bei x,5):</label>
+                    <label>Letzte Zeugnisnote (for Pädagogische Tendenz bei x,5):</label>
                     <select id="vorherigeNote"></select>
                 </div>
                 <div class="form-group" id="wunsch-group" style="display:none;">
@@ -384,6 +433,6 @@
         </div>
     </div>
 
-    <script src="CORE/core.js"></script>
+    <script type="module" src="CORE/core.js"></script>
 </body>
 </html>

@@ -1,0 +1,32 @@
+<div class="timetable-wrapper">
+    <table class="timetable">
+        </table>
+    
+    <button class="btn" style="margin-top: 10px; background: linear-gradient(135deg, #7c3aed, #4f46e5);" onclick="saveTimetable()">
+        💾 Stundenplan speichern
+    </button>
+
+    <div class="calendar-section" style="margin-top: 40px;">
+        <div class="calendar-header">
+            <h3 id="calendar-title" onclick="toggleCalendarView()">📅 Heute (Kompaktmodus)</h3>
+            <button id="btn-calendar-view" class="tool-btn" onclick="toggleCalendarView()">📅 Ganzer Monat</button>
+        </div>
+
+        <div id="calendar-nav" class="calendar-nav" style="display: none;">
+            <button onclick="changeMonth(-1)">◀</button>
+            <span id="current-month-year"></span>
+            <button onclick="changeMonth(1)">▶</button>
+        </div>
+
+        <div id="calendar-grid" class="calendar-grid compact">
+            </div>
+
+        <div id="calendar-event-form" class="event-form" style="margin-top: 15px;">
+            <h4 id="selected-date-title">Eintrag für heute:</h4>
+            <textarea id="calendar-event-input" placeholder="Hausaufgaben, Klausuren oder Termine eintragen..."></textarea>
+            <button class="btn" style="background: #34d399; color: #111; margin-top: 8px;" onclick="saveCalendarEvent()">
+                📌 Eintrag speichern
+            </button>
+        </div>
+    </div>
+</div>
