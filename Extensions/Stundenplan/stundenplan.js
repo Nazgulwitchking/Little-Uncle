@@ -1,32 +1,60 @@
 export function initStundenplan() {
-    const timetableBody = document.getElementById('timetable-body');
-    if (!timetableBody) return;
+    const table = document.querySelector('.timetable');
+    if (!table) return;
 
-    // 9 Schulstunden pro Tag
+    // 9 Schulstunden und die Schultage definieren
     const stundenAnzahl = 9;
     const wochentage = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
     
-    // Daten aus dem Speicher holen oder leeres Objekt erstellen
+    // Daten laden
     let savedData = localStorage.getItem('little_uncle_stundenplan');
     let stundenplanDaten = savedData ? JSON.parse(savedData) : {};
 
-    timetableBody.innerHTML = '';
+    // Tabelle komplett zurücksetzen
+    table.innerHTML = '';
 
-    // Generiere Zeile für Zeile (Stunde 1 bis 9)
+    // ==========================================
+    // 1. KOPFZEILE ERSTELLEN (X-Achse: Wochentage)
+    // ==========================================
+    const headerRow = document.createElement('tr');
+    
+    // Die Ecke oben links bleibt leer oder dient als Beschriftung
+    const cornerCell = document.createElement('th');
+    cornerCell.innerText = 'Std.';
+    cornerCell.className = 'timetable-corner';
+    headerRow.appendChild(cornerCell);
+
+    // Wochentage als Spaltenüberschriften hinzufügen
+    wochentage.forEach((tag, tagIndex) => {
+        const th = document.createElement('th');
+        th.innerText = tag;
+        th.id = `day-${tagIndex + 1}`;
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    // ==========================================
+    // 2. ZEILEN ERSTELLEN (Y-Achse: Schulstunden)
+    // ==========================================
     for (let stunde = 1; stunde <= stundenAnzahl; stunde++) {
         const row = document.createElement('tr');
         
+        // Erste Zelle ganz links: Die Stunden-Nummer
+        const hourCell = document.createElement('td');
+        hourCell.className = 'hour-axis-cell';
+        hourCell.innerText = `${stunde}.`;
+        row.appendChild(hourCell);
+        
+        // Jetzt für jeden Wochentag in dieser Reihe eine Zelle generieren
         wochentage.forEach((tag, tagIndex) => {
             const cell = document.createElement('td');
             const cellId = `${tag}-${stunde}`;
             const daten = stundenplanDaten[cellId] || { fach: '', lehrer: '', raum: '' };
 
-            // Klasse für das CSS-Styling und die Spaltenzuordnung (1-5)
             cell.className = `timetable-cell col-${tagIndex + 1}`;
 
-            // Input-Felder für Fach, Lehrer und Raum
+            // Kompakt die drei Felder untereinander in der echten Tabellenzelle
             cell.innerHTML = `
-                <div class="cell-hour">${stunde}. Std.</div>
                 <input type="text" class="cell-subject" placeholder="Fach" value="${daten.fach}" data-id="${cellId}" data-field="fach">
                 <input type="text" class="cell-info" placeholder="Lehrer" value="${daten.lehrer}" data-id="${cellId}" data-field="lehrer">
                 <input type="text" class="cell-info" placeholder="Raum" value="${daten.raum}" data-id="${cellId}" data-field="raum">
@@ -34,11 +62,11 @@ export function initStundenplan() {
             row.appendChild(cell);
         });
         
-        timetableBody.appendChild(row);
+        table.appendChild(row);
     }
 
-    // Event-Listener: Erkennt Änderungen sofort beim Tippen und merkt sie sich im Objekt
-    timetableBody.querySelectorAll('input').forEach(input => {
+    // Event-Listener fürs automatische Speichern beim Tippen im Objekt
+    table.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', (e) => {
             const id = e.target.getAttribute('data-id');
             const field = e.target.getAttribute('data-field');
@@ -53,7 +81,7 @@ export function initStundenplan() {
         alert('Stundenplan erfolgreich gespeichert! 💾');
     };
 
-    // Live-Highlight für den heutigen Wochentag aktivieren
+    // Live-Highlight für die aktuelle Spalte aktivieren
     highlightAktuellenTag();
 
     // Kalender-Bereich initialisieren
@@ -64,18 +92,16 @@ function highlightAktuellenTag() {
     const heute = new Date();
     let aktuellerTagIndex = heute.getDay(); // 0 = So, 1 = Mo, 2 = Di, ..., 6 = Sa
 
-    // Alle vorherigen Highlights sicherheitshalber entfernen
+    // Alle alten Highlights entfernen
     document.querySelectorAll('.timetable th, .timetable td').forEach(el => {
         el.classList.remove('today-glow');
     });
 
-    // Wenn heute ein Schultag ist (Mo-Fr -> 1-5)
+    // Da heute Dienstag (30.06.2026) ist, trifft Index 2 zu und bringt die Spalte zum Leuchten
     if (aktuellerTagIndex >= 1 && aktuellerTagIndex <= 5) {
-        // Kopfzeile (Mo, Di, Mi...) zum Leuchten bringen
         const headerCell = document.getElementById(`day-${aktuellerTagIndex}`);
         if (headerCell) headerCell.classList.add('today-glow');
 
-        // Die komplette Spalte der td-Zellen zum Leuchten bringen
         document.querySelectorAll(`.col-${aktuellerTagIndex}`).forEach(cell => {
             cell.classList.add('today-glow');
         });
@@ -83,10 +109,10 @@ function highlightAktuellenTag() {
 }
 
 // ==========================================
-// KALEBDER-STEUERUNG (Bleibt voll integriert)
+// KALENDER-STEUERUNG
 // ==========================================
 let currentYear = 2026;
-let currentMonth = 5; // Juni (0-indiziert, also 5 = Juni)
+let currentMonth = 5; 
 let isCompactView = true;
 
 function initKalender() {
@@ -111,7 +137,6 @@ function renderKompaktKalender() {
 
     grid.innerHTML = '';
     
-    // Speziell für heute: Dienstag, 30. Juni 2026
     const heuteCard = document.createElement('div');
     heuteCard.className = 'calendar-day today';
     heuteCard.style.border = '2px solid #7c3aed';
@@ -146,23 +171,19 @@ function renderVollKalender() {
     const ersterTag = new Date(currentYear, currentMonth, 1).getDay();
     const tageImMonat = new Date(currentYear, currentMonth + 1, 0).getDate();
     
-    // Wochentag-Korrektur für Montag als Wochenstart
     let startVersatz = ersterTag === 0 ? 6 : ersterTag - 1;
 
-    // Leere Felder vor dem ersten Tag des Monats auffüllen
     for (let i = 0; i < startVersatz; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'calendar-day empty';
         grid.appendChild(emptyCell);
     }
 
-    // Tage des Monats rendern
     for (let tag = 1; tag <= tageImMonat; tag++) {
         const dayCell = document.createElement('div');
         dayCell.className = 'calendar-day';
         dayCell.innerText = tag;
 
-        // Abgleich ob es sich um den heutigen Tag handelt (30.06.2026)
         if (currentYear === 2026 && currentMonth === 5 && tag === 30) {
             dayCell.classList.add('today');
         }
