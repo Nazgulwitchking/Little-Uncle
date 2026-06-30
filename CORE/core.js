@@ -1707,20 +1707,19 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload(true);
     }
 });
-
 // ==========================================
-// MANUELLES UPDATE-TRIGGERSYSTEM (REPARIERT)
+// MANUELLES UPDATE-TRIGGERSYSTEM (HTML-ABGLEICH)
 // ==========================================
 window.checkForUpdatesManual = function() {
-    // Hier holen wir uns die Elemente direkt aus deinem HTML
-    const popup = document.getElementById('update-popup') || document.getElementById('update-card');
-    const text = document.getElementById('update-text') || document.getElementById('update-message');
-    const btn = document.getElementById('update-btn') || document.getElementById('update-button');
+    // Hier holen wir uns die exakten IDs aus deinem HTML!
+    const popup = document.getElementById('manual-update-popup');
+    const text = document.getElementById('update-modal-text');
+    const btn = document.getElementById('update-modal-btn');
 
-    // Sicherheitscheck: Falls die Elemente im HTML existieren, steuern wir sie an
+    // 1. Popup sofort anzeigen & Starttext setzen
+    if (popup) popup.style.display = 'flex'; // 'flex' passt perfekt zum CSS-Overlay
     if (text) text.innerText = 'Suche nach Updates gestartet...';
     if (btn) btn.style.display = 'none';
-    if (popup) popup.style.display = 'block'; // Falls es ein Popup ist, blenden wir es ein
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
@@ -1773,8 +1772,6 @@ window.checkForUpdatesManual = function() {
         }
     }
 };
-
-
 
 // ==========================================
 // ERWEITERUNGS-SYSTEM
