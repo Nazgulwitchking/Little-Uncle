@@ -5,42 +5,236 @@ import { initStundenplan } from '../Extensions/Stundenplan/stundenplan.js';
 // ==========================================
 let deferredPrompt; // Nur einmal ganz oben deklarieren!
 
-// Korrigierte Infotexte für die Apps (IDs exakt an HTML-Struktur angepasst)
-// Korrigierte Infotexte für die Apps (IDs exakt an HTML-Struktur angepasst)
-const infoTexts = {
-    "klassen-page": "Dieser Rechner ermöglicht es dir, mit Hilfe von komplexen mathematischen Systemen, eine ungefähre Wahrscheinlichkeit für das Zusammenkommen mit einer anderen Person in der 11. Klasse. Das Ergebnis wird genauer wenn ebenfalls die Wunschpartner der Zielperson angegeben werden.",
-    
-    // Jetzt korrekt: rechner-page zeigt nun den Text für den Wahrscheinlichkeitsrechner
-    "rechner-page": "Dieser Rechner ermöglicht es dir, mit Hilfe von komplexen mathematischen Systemen, eine ungefähre Wahrscheinlichkeit für das Zusammenkommen mit einer anderen Person in der 11. Klasse. Das Ergebnis wird genauer wenn ebenfalls die Wunschpartner der Zielperson angegeben werden.",
-    
-    "match-page": "Mit dem „Matchpartner-Finder“ kannst du direkt zwei verschiedene Personen miteinander vergleichen, um mathematisch zu sehen, mit wem deine Chancen auf eine gemeinsame Klasse höher stehen.",
-    
-    "noten-page": "Hier kannst du deine Noten für die hessische Mittelstufe (1-6) oder Oberstufe (0-15 Punkte) verwalten. Nutze den Rechner für aktuelle Stände oder den Planer für Wunschnoten."
+// Dynamische Infotexte (werden jetzt per applyLanguage() übersetzt)
+let infoTexts = {
+    "klassen-page": "",
+    "rechner-page": "",
+    "match-page": "",
+    "noten-page": ""
 };
 let aktuelleGeoeffneteApp = "";
 
-// DAS ÜBERSETZUNGS-WÖRTERBUCH
+// DAS ÜBERSETZUNGS-WÖRTERBUCH (20 SPRACHEN - VOLLSTÄNDIG INTEGRIERT)
 const translations = {
-    de: {
-        "landing-title": "Willkommen bei Little Uncle",
-        "dash-tile1-title": "Klassen-Verteilung & Matcher",
-        "dash-tile1-desc": "Berechne deine Chancen und finde deinen optimalen Matchpartner aus der Stufe.",
-        "dash-tile2-title": "Hessischer Noten-Rechner",
-        "dash-tile2-desc": "Verwalte deine Fächer, berechne exakte Zeugnisnoten und plane Wunschergebnisse."
-    },
     en: {
         "landing-title": "Welcome to Little Uncle",
         "dash-tile1-title": "Class Distribution & Matcher",
         "dash-tile1-desc": "Calculate your chances and find your perfect match in your grade.",
         "dash-tile2-title": "Hessian Grade Calculator",
-        "dash-tile2-desc": "Manage your subjects, calculate exact report card grades, and plan target results."
+        "dash-tile2-desc": "Manage your subjects, calculate exact report card grades, and plan target results.",
+        "info-klassen": "This calculator uses complex mathematical systems to estimate the probability of ending up in the same 11th-grade class with another person.",
+        "info-match": "With the Match Finder, you can compare two different people to see with whom your chances are mathematically higher.",
+        "info-noten": "Manage your grades for the Hessian lower or upper secondary school. Use the calculator or the target planner.",
+        "info-fallback": "No additional information available for this view."
+    },
+    de: {
+        "landing-title": "Willkommen bei Little Uncle",
+        "dash-tile1-title": "Klassen-Verteilung & Matcher",
+        "dash-tile1-desc": "Berechne deine Chancen und finde deinen optimalen Matchpartner aus der Stufe.",
+        "dash-tile2-title": "Hessischer Noten-Rechner",
+        "dash-tile2-desc": "Verwalte deine Fächer, berechne exakte Zeugnisnoten und plane Wunschergebnisse.",
+        "info-klassen": "Dieser Rechner ermöglicht es dir, mit Hilfe von komplexen mathematischen Systemen, eine ungefähre Wahrscheinlichkeit für das Zusammenkommen mit einer anderen Person in der 11. Klasse zu berechnen.",
+        "info-match": "Mit dem „Matchpartner-Finder“ kannst du direkt zwei verschiedene Personen miteinander vergleichen, um mathematisch zu sehen, mit wem deine Chancen höher stehen.",
+        "info-noten": "Hier kannst du deine Noten für die hessische Mittelstufe (1-6) oder Oberstufe (0-15 Punkte) verwalten.",
+        "info-fallback": "Keine zusätzlichen Informationen für diese Ansicht verfügbar."
+    },
+    es: {
+        "landing-title": "Bienvenido a Little Uncle",
+        "dash-tile1-title": "Distribución de Clases y Matcher",
+        "dash-tile1-desc": "Calcula tus posibilidades y encuentra tu pareja perfecta en tu grado.",
+        "dash-tile2-title": "Calculadora de Notas de Hesse",
+        "dash-tile2-desc": "Gestiona tus asignaturas, calcula notas exactas y planifica resultados objetivos.",
+        "info-klassen": "Esta calculadora utiliza sistemas matemáticos complejos para estimar la probabilidad de coincidir en la misma clase de 11º grado.",
+        "info-match": "Con el Buscador de Match, puedes comparar dos personas para ver con quién son matemáticamente mayores tus posibilidades.",
+        "info-noten": "Gestiona tus notas para la escuela secundaria inferior o superior de Hesse.",
+        "info-fallback": "No hay información adicional disponible para esta vista."
+    },
+    fr: {
+        "landing-title": "Bienvenue chez Little Uncle",
+        "dash-tile1-title": "Répartition des Classes & Matcher",
+        "dash-tile1-desc": "Calculez vos chances et trouvez votre partenaire idéal dans votre promotion.",
+        "dash-tile2-title": "Calculateur de Notes de Hesse",
+        "dash-tile2-desc": "Gérez vos matières, calculez les notes exactes du bulletin et planifiez vos objectifs.",
+        "info-klassen": "Ce calculateur utilise des systèmes mathématiques complexes pour estimer la probabilité de se retrouver dans la même classe de 11ème.",
+        "info-match": "Avec le Match Finder, comparez deux personnes pour voir avec laquelle vos chances sont mathématiquement plus élevées.",
+        "info-noten": "Gérez vos notes pour le collège ou le lycée en Hesse.",
+        "info-fallback": "Aucune information supplémentaire disponible pour cette vue."
+    },
+    it: {
+        "landing-title": "Benvenuto su Little Uncle",
+        "dash-tile1-title": "Distribuzione Classi & Matcher",
+        "dash-tile1-desc": "Calcola le tue possibilità e trova il tuo partner ideale nel tuo anno.",
+        "dash-tile2-title": "Calcolatore Voti dell'Assia",
+        "dash-tile2-desc": "Gestisci le tue materie, calcola i voti esatti della pagella e pianifica i risultati.",
+        "info-klassen": "Questo calcolatore utilizza sistemi matematici complessi per stimare la probabilità di finire nella stessa classe di 11° grado.",
+        "info-match": "Con il Match Finder puoi confrontare due persone per vedere con chi le tue possibilità sono matematicamente più alte.",
+        "info-noten": "Gestisci i tuoi voti per la scuola secondaria inferiore o superiore dell'Assia.",
+        "info-fallback": "Nessuna informazione aggiuntiva disponibile per questa vista."
+    },
+    pt: {
+        "landing-title": "Bem-vindo ao Little Uncle",
+        "dash-tile1-title": "Distribuição de Classes & Matcher",
+        "dash-tile1-desc": "Calcule suas chances e encontre seu par perfeito no seu ano letivo.",
+        "dash-tile2-title": "Calculadora de Notas de Hesse",
+        "dash-tile2-desc": "Gerencie suas disciplinas, calcule notas exatas do boletim e planeje resultados.",
+        "info-klassen": "Esta calculadora usa sistemas matemáticos complexos para estimar a probabilidade de ficar na mesma turma do 11º ano.",
+        "info-match": "Com o Match Finder, você pode comparar duas pessoas para ver com quem suas chances são matematicamente maiores.",
+        "info-noten": "Gerencie suas notas para o ensino fundamental ou médio de Hesse.",
+        "info-fallback": "Nenhuma informação adicional disponível para esta visualização."
+    },
+    nl: {
+        "landing-title": "Welkom bij Little Uncle",
+        "dash-tile1-title": "Klasverdeling & Matcher",
+        "dash-tile1-desc": "Bereken je kansen en vind je perfecte match in je leerjaar.",
+        "dash-tile2-title": "Hessische Cijfercalculator",
+        "dash-tile2-desc": "Beheer je vakken, bereken exacte rapportcijfers en plan je doelresultaten.",
+        "info-klassen": "Deze calculator gebruikt complexe wiskundige systemen om de kans te berekenen dat je in dezelfde klas van de 11e klas komt.",
+        "info-match": "Met de Match Finder kun je twee personen vergelijken om te zien met wie je kansen wiskundig gezien hoger zijn.",
+        "info-noten": "Beheer je cijfers voor de Hessische onder- of bovenbouw.",
+        "info-fallback": "Geen extra informatie beschikbaar voor deze weergave."
+    },
+    pl: {
+        "landing-title": "Witamy w Little Uncle",
+        "dash-tile1-title": "Podział Klas & Matcher",
+        "dash-tile1-desc": "Oblicz swoje szanse i znajdź idealnego partnera w swoim roczniku.",
+        "dash-tile2-title": "Heski Kalkulator Ocen",
+        "dash-tile2-desc": "Zarządzaj przedmiotami, obliczaj dokładne oceny ze świadectwa i planuj cele.",
+        "info-klassen": "Ten kalkulator wykorzystuje złożone systemy matematyczne do oszacowania prawdopodobieństwa znalezienia się w tej samej 11. klasie.",
+        "info-match": "Dzięki Match Finder możesz porównać dwie osoby, aby zobaczyć, z kim Twoje szanse są matematycznie wyższe.",
+        "info-noten": "Zarządzaj swoimi ocenami dla heskiej szkoły średniej niższego lub wyższego stopnia.",
+        "info-fallback": "Brak dodatkowych informacji dla tego widoku."
+    },
+    ru: {
+        "landing-title": "Добро пожаловать в Little Uncle",
+        "dash-tile1-title": "Распределение классов и Матчер",
+        "dash-tile1-desc": "Рассчитайте свои шансы и найдите идеальную пару на своем параллели.",
+        "dash-tile2-title": "Гессенский калькулятор оценок",
+        "dash-tile2-desc": "Управляйте предметами, рассчитывайте точные оценки в аттестате и планируйте результаты.",
+        "info-klassen": "Этот калькулятор использует сложные математические системы для оценки вероятности попасть в один 11-й класс.",
+        "info-match": "С помощью Match Finder вы можете сравнить двух человек, чтобы увидеть, с кем ваши шансы математически выше.",
+        "info-noten": "Управляйте своими оценками для гессенской средней или старшей школы.",
+        "info-fallback": "Нет дополнительной информации для этого вида."
+    },
+    tr: {
+        "landing-title": "Little Uncle'a Hoş Geldiniz",
+        "dash-tile1-title": "Sınıf Dağılımı & Eşleştirici",
+        "dash-tile1-desc": "Şansınızı hesaplayın ve döneminizdeki en iyi eşleşmeyi bulun.",
+        "dash-tile2-title": "Hessen Not Hesaplayıcı",
+        "dash-tile2-desc": "Derslerinizi yönetin, kesin karne notlarını hesaplayın ve hedef sonuçları planlayın.",
+        "info-klassen": "Bu hesaplayıcı, başka bir kişiyle aynı 11. sınıf şubesine düşme olasılığınızı tahmin etmek için karmaşık matematiksel sistemler kullanır.",
+        "info-match": "Match Finder ile iki farklı kişiyi karşılaştırabilir ve hangisiyle şansınızın matematiksel olarak daha yüksek olduğunu görebilirsiniz.",
+        "info-noten": "Hessen ortaokul veya lise kademesi için notlarınızı yönetin.",
+        "info-fallback": "Bu görünüm için ek bilgi mevcut değil."
+    },
+    ar: {
+        "landing-title": "مرحباً بك في Little Uncle",
+        "dash-tile1-title": "توزيع الفصول والمطابقة",
+        "dash-tile1-desc": "احسب فرصك وابحث عن الشريك المثالي في مرحلتك الدراسية.",
+        "dash-tile2-title": "حاسبة الدرجات في ولاية هسن",
+        "dash-tile2-desc": "إدارة موادك الدراسية، وحساب درجات الشهادة الدقيقة، والتخطيط للنتائج المستهدفة.",
+        "info-klassen": "تستخدم هذه الحاسبة أنظمة رياضية معقدة لتقدير احتمالية التواجد في نفس فصل الصف الحادي عشر مع شخص آخر.",
+        "info-match": "باستخدام محدد المطابقة، يمكنك مقارنة شخصين لمعرفة من تكون فرصك معه أعلى رياضياً.",
+        "info-noten": "إدارة درجاتك للمرحلة المتوسطة أو الثانوية في ولاية هسن.",
+        "info-fallback": "لا توجد معلومات إضافية متاحة لهذا العرض."
+    },
+    he: {
+        "landing-title": "ברוכים הבאים ל-Little Uncle",
+        "dash-tile1-title": "חלוקת כיתות והתאמה",
+        "dash-tile1-desc": "חשב את הסיכויים שלך ומצא את ההתאמה המושלמת בשכבה שלך.",
+        "dash-tile2-title": "מחשבון ציונים של הסן",
+        "dash-tile2-desc": "נהל את המקצועות שלך, חשב את ציוני התעודה המדויקים ותכנן תוצאות יעד.",
+        "info-klassen": "מחשבון זה משתמש במערכות מתמטיות מורכבות כדי להעריך את ההסתברות להגיע לאותה כיתה ביא' עם אדם אחר.",
+        "info-match": "בעזרת מוצא ההתאמות, תוכל להשוות בין שני אנשים שונים כדי לראות עם מי הסיכויים שלך גבוהים יותר מתמטית.",
+        "info-noten": "נהל את הציונים שלך עבור חטיבת הביניים או החטיבה העליונה של הסן.",
+        "info-fallback": "אין מידע נוסף זמין עבור תצוגה זו."
+    },
+    ja: {
+        "landing-title": "Little Uncle へようこそ",
+        "dash-tile1-title": "クラス振り分け＆マッチング",
+        "dash-tile1-desc": "確率を計算し、学年の中から最適なマッチング相手を見つけます。",
+        "dash-tile2-title": "ヘッセン州成績計算ツール",
+        "dash-tile2-desc": "教科を管理し、正確な通知表の成績を計算し、目標結果を計画します。",
+        "info-klassen": "この計算ツールは、複雑な数学的システムを使用して、別の人物と同じ11年生のクラスになる確率を推定します。",
+        "info-match": "マッチファインダーを使用すると、2人の人物を比較して、どちらの方が数学的に確率が高いかを確認できます。",
+        "info-noten": "ヘッセン州の中等教育前期または後期の成績を管理します。",
+        "info-fallback": "このビューに関する追加情報はありません。"
+    },
+    ko: {
+        "landing-title": "Little Uncle에 오신 것을 환영합니다",
+        "dash-tile1-title": "반 배정 및 매칭",
+        "dash-tile1-desc": "확률을 계산하고 학년에서 가장 잘 맞는 매칭 파트너를 찾으세요.",
+        "dash-tile2-title": "헤센주 성적 계산기",
+        "dash-tile2-desc": "과목을 관리하고, 정확한 성적표 점수를 계산하며, 목표 결과를 계획하세요.",
+        "info-klassen": "이 계산기는 복잡한 수학적 시스템을 사용하여 다른 사람과 같은 11학년 반에 배정될 확률을 추정합니다.",
+        "info-match": "매치 파인더를 사용하면 두 사람을 비교하여 누구와 함께할 확률이 수학적으로 더 높은지 확인할 수 있습니다.",
+        "info-noten": "헤센주 중등 및 고등 과정의 성적을 관리하세요.",
+        "info-fallback": "이 보기에 대한 추가 정보가 없습니다."
     },
     zh: {
         "landing-title": "欢迎来到 Little Uncle",
         "dash-tile1-title": "班级分配与匹配器",
-        "dash-tile1-desc": "计算 your 概率并从年级中找到最佳匹配伙伴。",
+        "dash-tile1-desc": "计算你的概率并从年级中找到最佳匹配伙伴。",
         "dash-tile2-title": "黑森州成绩计算器",
-        "dash-tile2-desc": "管理你的科目，计算精确的成绩单分数并规划目标结果。"
+        "dash-tile2-desc": "管理你的科目，计算精确的成绩单分数并规划目标结果。",
+        "info-klassen": "该计算器利用复杂的数学系统来估算与另一个人进入同一个11年级班级的概率。",
+        "info-match": "通过匹配器，您可以直接对比两个人，看与谁进入同一班级的数学概率更高。",
+        "info-noten": "在此管理黑森州初中或高中的成绩。",
+        "info-fallback": "该视图暂无其他附加信息。"
+    },
+    hi: {
+        "landing-title": "Little Uncle में आपका स्वागत है",
+        "dash-tile1-title": "कक्षा वितरण और मैचर",
+        "dash-tile1-desc": "अपनी संभावनाओं की गणना करें और अपने बैच से अपना आदर्श मैच खोजें।",
+        "dash-tile2-title": "हेसियन ग्रेड कैलकुलेटर",
+        "dash-tile2-desc": "अपने विषयों का प्रबंधन करें, सटीक रिपोर्ट कार्ड ग्रेड की गणना करें और लक्ष्य परिणामों की योजना बनाएं।",
+        "info-klassen": "यह कैलकुलेटर किसी अन्य व्यक्ति के साथ समान 11वीं कक्षा में आने की संभावना का अनुमान लगाने के लिए जटिल गणितीय प्रणालियों का उपयोग करता है।",
+        "info-match": "मैच फाइंडर से आप दो लोगों की तुलना कर सकते हैं और देख सकते हैं कि गणितीय रूप से आपकी संभावना किसके साथ अधिक है।",
+        "info-noten": "हेसियन माध्यमिक या उच्चतर माध्यमिक विद्यालय के लिए अपने ग्रेड प्रबंधित करें।",
+        "info-fallback": "इस दृश्य के लिए कोई अतिरिक्त जानकारी उपलब्ध नहीं है।"
+    },
+    sv: {
+        "landing-title": "Välkommen till Little Uncle",
+        "dash-tile1-title": "Klassfördelning & Matcher",
+        "dash-tile1-desc": "Beräkna dina chanser och hitta din perfekta matchning i din årskurs.",
+        "dash-tile2-title": "Hessisk Betygsräknare",
+        "dash-tile2-desc": "Hantera dina ämnen, beräkna exakta betygsresultat och planera målbetyg.",
+        "info-klassen": "Denna räknare använder komplexa matematiska system för att uppskatta sannolikheten att hamna i samma klass i 11:e klass med en annan person.",
+        "info-match": "Med Match Finder kan du jämföra två personer för att se med vem dina chanser är matematiskt högre.",
+        "info-noten": "Hantera dina betyg för den hessiska grundskolan eller gymnasiet.",
+        "info-fallback": "Ingen ytterligare information tillgänglig för denna vy."
+    },
+    no: {
+        "landing-title": "Velkommen til Little Uncle",
+        "dash-tile1-title": "Klassefordeling & Matcher",
+        "dash-tile1-desc": "Beregn sjansene dine og finn din perfekte match på trinnet ditt.",
+        "dash-tile2-title": "Hessisk Karakterkalkulator",
+        "dash-tile2-desc": "Administrer fagene dine, beregn nøyaktige terminkarakterer og planlegg måleresultater.",
+        "info-klassen": "Denne kalkulatoren bruker komplekse matematiske systemer til å beregne sannsynligheten for å havne i samme 11. klasse som en annen person.",
+        "info-match": "Med Match Finder kan du sammenligne to personer for å se hvem sjansene dine er matematisk høyere med.",
+        "info-noten": "Administrer karakterene dine for den hessiske ungdomsskolen eller videregående skole.",
+        "info-fallback": "Ingen ekstra informasjon tilgjengelig for denne visningen."
+    },
+    da: {
+        "landing-title": "Velkommen til Little Uncle",
+        "dash-tile1-title": "Klassefordeling & Matcher",
+        "dash-tile1-desc": "Beregn dine chancer og find dit perfekte match på din årgang.",
+        "dash-tile2-title": "Hessisk Karakterberegner",
+        "dash-tile2-desc": "Administrer dine fag, beregn præcise karakterer og planlæg dine måleresultater.",
+        "info-klassen": "Denne beregner bruger komplekse matematiske systemer til at estimere sandsynligheden for at ende i samme klasse i 11. klasse med en anden person.",
+        "info-match": "Med Match Finder kan du sammenligne to personer for at se, hvem dine chancer er matematisk højere med.",
+        "info-noten": "Administrer dine karakterer for den hessiske mellemtrin eller gymnasieoverbygning.",
+        "info-fallback": "Ingen yderligere oplysninger tilgængelige for denne visning."
+    },
+    fi: {
+        "landing-title": "Tervetuloa Little Uncleen",
+        "dash-tile1-title": "Luokkajako & Matcher",
+        "dash-tile1-desc": "Laske mahdollisuutesi ja löydä täydellinen kumppani luokaltasi.",
+        "dash-tile2-title": "Hessenin Arvosanalaskuri",
+        "dash-tile2-desc": "Hallitse aineitasi, laske tarkat todistuksen arvosanat ja suunnittele tavoitteesi.",
+        "info-klassen": "Tämä laskuri käyttää monimutkaisia matemaattisia järjestelmiä arvioidakseen todennäköisyyden päätyä samalle 11. luokalle toisen henkilön kanssa.",
+        "info-match": "Match Finderin avulla voit vertailla kahta henkilöä nähdäksesi, kenen kanssa mahdollisuutesi ovat matemaattisesti korkeammat.",
+        "info-noten": "Hallitse arvosanojasi Hessenin yläkoulussa tai lukiossa.",
+        "info-fallback": "Tälle näkymälle ei ole saatavilla lisätietoja."
     }
 };
 
@@ -48,12 +242,23 @@ function applyLanguage(lang) {
     const langData = translations[lang];
     if (!langData) return;
 
+    // 1. Alle Textelemente übersetzen, die eine ID besitzen
     for (const [id, text] of Object.entries(langData)) {
         const element = document.getElementById(id);
         if (element) {
-            element.innerText = text;
+            if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+                element.placeholder = text;
+            } else {
+                element.innerText = text;
+            }
         }
     }
+
+    // 2. Das dynamische Infotext-Objekt synchronisieren
+    infoTexts["klassen-page"] = langData["info-klassen"] || langData["info-fallback"];
+    infoTexts["rechner-page"] = langData["info-klassen"] || langData["info-fallback"];
+    infoTexts["match-page"] = langData["info-match"] || langData["info-fallback"];
+    infoTexts["noten-page"] = langData["info-noten"] || langData["info-fallback"];
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -109,7 +314,8 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const savedLang = localStorage.getItem('littleUncle_lang') || 'de';
+    // SPRACHSTANDARD AUF ENGLISCH GEÄNDERT ('en' statt 'de')
+    const savedLang = localStorage.getItem('littleUncle_lang') || 'en';
     const savedRegion = localStorage.getItem('littleUncle_region');
     
     if (document.getElementById('settings-lang')) {
@@ -155,7 +361,8 @@ function toggleInfo(show) {
     if (show === false || (show === undefined && drawer.style.left === '0px')) {
         drawer.style.left = '-300px';
     } else {
-        textEl.innerText = infoTexts[aktuelleGeoeffneteApp] || "Keine zusätzlichen Informationen für diese Ansicht verfügbar.";
+        const savedLang = localStorage.getItem('littleUncle_lang') || 'en';
+        textEl.innerText = infoTexts[aktuelleGeoeffneteApp] || translations[savedLang]["info-fallback"];
         drawer.style.left = '0px';
     }
 }
@@ -645,12 +852,9 @@ function styleFeedbackCard(kat) {
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // Zwingt das Handy, die sw.js NIEMALS zwischenzuspeichern
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then((registration) => {
                 console.log('Service Worker erfolgreich registriert.');
-                
-                // Prüft sofort beim App-Start live auf GitHub nach Updates
                 registration.update();
 
                 registration.onupdatefound = () => {
@@ -661,11 +865,7 @@ if ('serviceWorker' in navigator) {
                         if (installingWorker.state === 'installed') {
                             if (navigator.serviceWorker.controller) {
                                 console.log('Neuer Code erkannt! SKIP_WAITING wird gesendet...');
-                                
-                                // Das wirft den alten Service Worker raus und aktiviert den neuen!
                                 installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                                
-                                // Dein gewohnter Hinweis für den Nutzer
                                 alert('App hat ein Update gefunden und lädt jetzt neu!');
                             }
                         }
@@ -678,16 +878,13 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-
-    let isRefreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!isRefreshing) {
-            isRefreshing = true;
-            window.location.reload(true);
-        }
-    });
-
-
+let isRefreshing = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!isRefreshing) {
+        isRefreshing = true;
+        window.location.reload(true);
+    }
+});
 
 // ==========================================
 // MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
@@ -697,31 +894,23 @@ window.checkForUpdatesManual = function() {
     btn.style.display = 'none';
 
     if ('serviceWorker' in navigator) {
-        // Zwingt das Handy auch beim manuellen Klick, den Server direkt zu fragen
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then(() => navigator.serviceWorker.ready)
             .then(registration => {
                 return registration.update().then(() => {
-                    // FALL 1: Ein neues Update wartet auf Aktivierung
                     if (registration.waiting) {
                         text.innerText = 'Update gefunden! Die App wird neu geladen...';
                         btn.style.display = 'none';
-                        
-                        // Schmeißt den alten Service Worker sofort raus
                         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                         
                         setTimeout(() => {
                             window.location.reload(true);
                         }, 1200);
-                    } 
-                    // FALL 2: Kein Update vorhanden
-                    else {
+                    } else {
                         text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
                         btn.innerText = 'Schließen';
                         btn.style.display = 'block';
-                        btn.onclick = () => {
-                            popup.style.display = 'none';
-                        };
+                        btn.onclick = () => { popup.style.display = 'none'; };
                     }
                 });
             })
@@ -730,35 +919,24 @@ window.checkForUpdatesManual = function() {
                 text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
                 btn.innerText = 'Schließen';
                 btn.style.display = 'block';
-                btn.onclick = () => {
-                    popup.style.display = 'none';
-                };
+                btn.onclick = () => { popup.style.display = 'none'; };
             });
     } else {
-        // Das ist dein ursprünglicher Else-Block für Browser ohne Service Worker
         text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
         btn.innerText = 'Schließen';
         btn.style.display = 'block';
-        btn.onclick = () => {
-            popup.style.display = 'none';
-        };
+        btn.onclick = () => { popup.style.display = 'none'; };
     }
 };
 
-
-// ========================================================
-// ERWEITERUNGS-SYSTEM (Ganz unten an die core.js anhängen)
-// ========================================================
+// ==========================================
+// ERWEITERUNGS-SYSTEM
+// ==========================================
 function erweiterungLaden(ordnerName) {
     import(`../Extensions/${ordnerName}/extension.js`)
-        .then(modul => {
-            modul.starten();
-        })
-        .catch(fehler => {
-            console.log(`Hinweis: Die Erweiterung "${ordnerName}" ist nicht aktiv oder fehlt.`);
-        });
+        .then(modul => { modul.starten(); })
+        .catch(fehler => { console.log(`Hinweis: Die Erweiterung "${ordnerName}" ist nicht aktiv oder fehlt.`); });
 }
-
 
 erweiterungLaden('Extension1');
 
