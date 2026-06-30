@@ -372,3 +372,25 @@ hr {
 .setting-group {
     margin-bottom: 20px;
 }
+/* ==========================================
+   SPACE-LILA FLIMMERN / PULSIEREN EFFECT
+   ========================================== */
+
+/* Diese Animation lässt die Hintergrundfarbe sanft flimmern */
+@keyframes spaceFlicker {
+    0% {
+        background-color: #0d0b21; /* Sehr dunkles Space-Blau/Schwarz */
+    }
+    50% {
+        background-color: #2e1a47; /* Helles, leuchtendes Space-Lila */
+    }
+    100% {
+        background-color: #0d0b21;
+    }
+}
+
+/* Wendet die Animation auf die gesamte App an */
+body {
+    animation: spaceFlicker 3s infinite ease-in-out;
+    transition: background-color 0.5s ease;
+}
