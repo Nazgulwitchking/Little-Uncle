@@ -645,9 +645,12 @@ function styleFeedbackCard(kat) {
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        // Zwingt das Handy, die sw.js NIEMALS zwischenzuspeichern
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then((registration) => {
                 console.log('Service Worker erfolgreich registriert.');
+                
+                // Prüft sofort beim App-Start live auf GitHub nach Updates
                 registration.update();
 
                 registration.onupdatefound = () => {
@@ -657,10 +660,14 @@ if ('serviceWorker' in navigator) {
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed') {
                             if (navigator.serviceWorker.controller) {
-                                console.log('Neuer Code erkannt! Automatischer Reload wird ausgeführt...');
-                                alert('App hat ein Update gefunden und lädt jetzt neu!'); 
-                                window.location.reload(true);
-                            }                                
+                                console.log('Neuer Code erkannt! SKIP_WAITING wird gesendet...');
+                                
+                                // Das wirft den alten Service Worker raus und aktiviert den neuen!
+                                installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                                
+                                // Dein gewohnter Hinweis für den Nutzer
+                                alert('App hat ein Update gefunden und lädt jetzt neu!');
+                            }
                         }
                     };
                 };
@@ -669,6 +676,8 @@ if ('serviceWorker' in navigator) {
                 console.error('Fehler beim Service Worker Update-Check:', error);
             });
     });
+}
+
 
     let isRefreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -677,71 +686,65 @@ if ('serviceWorker' in navigator) {
             window.location.reload(true);
         }
     });
-}
+
 
 
 // ==========================================
 // MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
 // ==========================================
 window.checkForUpdatesManual = function() {
-    const popup = document.getElementById('manual-update-popup');
-    const text = document.getElementById('update-modal-text');
-    const btn = document.getElementById('update-modal-btn');
-
-    if (!popup || !text || !btn) {
-        alert("Update-Popup im HTML nicht gefunden!");
-        return;
-    }
-
-    // Popup anzeigen und Start-Status setzen
-    popup.style.display = 'flex';
     text.innerText = 'Suche nach Updates gestartet...';
     btn.style.display = 'none';
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-            // Holt die frischen Daten direkt vom GitHub-Server ab
-            registration.update().then(() => {
-                
-                // FALL 1: Ein neues Update wurde gefunden und wartet auf Aktivierung
-                if (registration.waiting) {
-                    text.innerText = 'Update gefunden! Die App wird neu geladen...';
-                    btn.style.display = 'none';
-                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    
-                    setTimeout(() => {
-                        window.location.reload(true); // Hard Reload für die neue Version
-                    }, 1200);
-                    
-                // FALL 2: Kein Update da, App ist bereits auf dem neuesten Stand
-                } else {
-                    text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
-                    btn.innerText = 'Schließen';
-                    btn.style.display = 'block';
-                    btn.onclick = () => {
-                        popup.style.display = 'none';
-                    };
-                }
-            }).catch(error => {
+        // Zwingt das Handy auch beim manuellen Klick, den Server direkt zu fragen
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+            .then(() => navigator.serviceWorker.ready)
+            .then(registration => {
+                return registration.update().then(() => {
+                    // FALL 1: Ein neues Update wartet auf Aktivierung
+                    if (registration.waiting) {
+                        text.innerText = 'Update gefunden! Die App wird neu geladen...';
+                        btn.style.display = 'none';
+                        
+                        // Schmeißt den alten Service Worker sofort raus
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        
+                        setTimeout(() => {
+                            window.location.reload(true);
+                        }, 1200);
+                    } 
+                    // FALL 2: Kein Update vorhanden
+                    else {
+                        text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
+                        btn.innerText = 'Schließen';
+                        btn.style.display = 'block';
+                        btn.onclick = () => {
+                            popup.style.display = 'none';
+                        };
+                    }
+                });
+            })
+            .catch(error => {
                 console.error('Fehler bei manuellen Update-Check:', error);
                 text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
                 btn.innerText = 'Schließen';
                 btn.style.display = 'block';
-                btn.onclick = () => { popup.style.display = 'none'; };
+                btn.onclick = () => {
+                    popup.style.display = 'none';
+                };
             });
-        }).catch(() => {
-            text.innerText = 'Der Service Worker ist noch nicht bereit.';
-            btn.innerText = 'Schließen';
-            btn.style.display = 'block';
-            btn.onclick = () => { popup.style.display = 'none'; };
-        });
     } else {
+        // Das ist dein ursprünglicher Else-Block für Browser ohne Service Worker
         text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
         btn.innerText = 'Schließen';
         btn.style.display = 'block';
-        btn.onclick = () => { popup.style.display = 'none'; };
+        btn.onclick = () => {
+            popup.style.display = 'none';
+        };
     }
 };
+
 
 // ========================================================
 // ERWEITERUNGS-SYSTEM (Ganz unten an die core.js anhängen)
@@ -772,3 +775,4 @@ window.setModus = setModus;
 window.anpassenFachfelder = anpassenFachfelder;
 window.fuehreBerechnungAus = fuehreBerechnungAus;
 window.checkForUpdatesManual = checkForUpdatesManual;
+
