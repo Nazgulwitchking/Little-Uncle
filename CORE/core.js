@@ -226,7 +226,7 @@ function goBackToDashboard() {
     
     toggleInfo(false);
 }
-
+    window.goBackToDashboard = goBackToDashboard;
 function switchSubTab(subPageId) {
     document.querySelectorAll('.sub-tab-content').forEach(tab => {
         tab.classList.remove('active');
