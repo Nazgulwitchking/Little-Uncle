@@ -679,10 +679,11 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+
 // ==========================================
-// MANUELLES UPDATE-TRIGGERSYSTEM
+// MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
 // ==========================================
-function checkForUpdatesManual() {
+window.checkForUpdatesManual = function() {
     const popup = document.getElementById('manual-update-popup');
     const text = document.getElementById('update-modal-text');
     const btn = document.getElementById('update-modal-btn');
@@ -692,49 +693,56 @@ function checkForUpdatesManual() {
         return;
     }
 
+    // Popup anzeigen und Start-Status setzen
     popup.style.display = 'flex';
     text.innerText = 'Suche nach Updates gestartet...';
     btn.style.display = 'none';
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
+            // Holt die frischen Daten direkt vom GitHub-Server ab
             registration.update().then(() => {
-                setTimeout(() => {
-                    const updateVerfuegbar = registration.waiting || registration.installing;
+                
+                // FALL 1: Ein neues Update wurde gefunden und wartet auf Aktivierung
+                if (registration.waiting) {
+                    text.innerText = 'Update gefunden! Die App wird neu geladen...';
+                    btn.style.display = 'none';
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    
+                    setTimeout(() => {
+                        window.location.reload(true); // Hard Reload für die neue Version
+                    }, 1200);
+                    
+                // FALL 2: Kein Update da, App ist bereits auf dem neuesten Stand
+                } else {
+                    text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
+                    btn.innerText = 'Schließen';
                     btn.style.display = 'block';
-
-                    if (updateVerfuegbar) {
-                        text.innerText = 'Update gefunden, Neustart erforderlich';
-                        btn.onclick = function() {
-                            if (registration.waiting) {
-                                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                            }
-                            window.location.reload(true);
-                        };
-                    } else {
-                        text.innerText = 'Keine Updates gefunden';
-                        btn.onclick = function() {
-                            popup.style.display = 'none';
-                        };
-                    }
-                }, 2500);
+                    btn.onclick = () => {
+                        popup.style.display = 'none';
+                    };
+                }
             }).catch(error => {
-                console.error('Fehler beim manuellen Update-Check:', error);
-                text.innerText = 'Fehler bei der Update-Suche.';
+                console.error('Fehler bei manuellen Update-Check:', error);
+                text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
+                btn.innerText = 'Schließen';
                 btn.style.display = 'block';
-                btn.onclick = () => popup.style.display = 'none';
+                btn.onclick = () => { popup.style.display = 'none'; };
             });
         }).catch(() => {
             text.innerText = 'Der Service Worker ist noch nicht bereit.';
+            btn.innerText = 'Schließen';
             btn.style.display = 'block';
-            btn.onclick = () => popup.style.display = 'none';
+            btn.onclick = () => { popup.style.display = 'none'; };
         });
     } else {
         text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
+        btn.innerText = 'Schließen';
         btn.style.display = 'block';
-        btn.onclick = () => popup.style.display = 'none';
+        btn.onclick = () => { popup.style.display = 'none'; };
     }
-}
+};
+
 // ========================================================
 // ERWEITERUNGS-SYSTEM (Ganz unten an die core.js anhängen)
 // ========================================================
