@@ -390,6 +390,6 @@ hr {
 
 /* Wendet das ruhige Pulsieren elegant auf die App an */
 body {
-    animation: spaceGlow 10s infinite alternate ease-in-out;
+    animation: spaceGlow 7s infinite alternate ease-in-out;
     transition: background-color 1.5s ease;
 }
