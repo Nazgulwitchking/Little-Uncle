@@ -1711,52 +1711,62 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 // ==========================================
 // MANUELLES UPDATE-TRIGGERSYSTEM (REPARIERT)
 // ==========================================
+// ==========================================
+// MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
+// ==========================================
 window.checkForUpdatesManual = function() {
-    const popup = document.getElementById('update-popup') || document.getElementById('popup');
-    const text = document.getElementById('update-text') || document.getElementById('text');
-    const btn = document.getElementById('update-btn') || document.getElementById('btn');
-
-    if(text) text.innerText = 'Suche nach Updates gestartet...';
-    if(btn) btn.style.display = 'none';
+    text.innerText = 'Suche nach Updates gestartet...';
+    btn.style.display = 'none';
 
     if ('serviceWorker' in navigator) {
+        // Zwingt das Handy auch beim manuellen Klick, den Server direkt zu fragen
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then(() => navigator.serviceWorker.ready)
             .then(registration => {
                 return registration.update().then(() => {
+                    // FALL 1: Ein neues Update wartet auf Aktivierung
                     if (registration.waiting) {
-                        if(text) text.innerText = 'Update gefunden! Die App wird neu geladen...';
-                        if(btn) btn.style.display = 'none';
+                        text.innerText = 'Update gefunden! Die App wird neu geladen...';
+                        btn.style.display = 'none';
+                        
+                        // Schmeißt den alten Service Worker sofort raus
                         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                        setTimeout(() => { window.location.reload(true); }, 1200);
-                    } else {
-                        if(text) text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
-                        if(btn) {
-                            btn.innerText = 'Schließen';
-                            btn.style.display = 'block';
-                            btn.onclick = () => { if(popup) popup.style.display = 'none'; };
-                        }
+                        
+                        setTimeout(() => {
+                            window.location.reload(true);
+                        }, 1200);
+                    } 
+                    // FALL 2: Kein Update vorhanden
+                    else {
+                        text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
+                        btn.innerText = 'Schließen';
+                        btn.style.display = 'block';
+                        btn.onclick = () => {
+                            popup.style.display = 'none';
+                        };
                     }
                 });
             })
             .catch(error => {
                 console.error('Fehler bei manuellen Update-Check:', error);
-                if(text) text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
-                if(btn) {
-                    btn.innerText = 'Schließen';
-                    btn.style.display = 'block';
-                    btn.onclick = () => { if(popup) popup.style.display = 'none'; };
-                }
+                text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
+                btn.innerText = 'Schließen';
+                btn.style.display = 'block';
+                btn.onclick = () => {
+                    popup.style.display = 'none';
+                };
             });
     } else {
-        if(text) text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
-        if(btn) {
-            btn.innerText = 'Schließen';
-            btn.style.display = 'block';
-            btn.onclick = () => { if(popup) popup.style.display = 'none'; };
-        }
+        // Das ist dein ursprünglicher Else-Block für Browser ohne Service Worker
+        text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
+        btn.innerText = 'Schließen';
+        btn.style.display = 'block';
+        btn.onclick = () => {
+            popup.style.display = 'none';
+        };
     }
 };
+
 
 // ==========================================
 // ERWEITERUNGS-SYSTEM
@@ -1785,4 +1795,5 @@ window.setStufe = setStufe;
 window.setModus = setModus;
 window.anpassenFachfelder = anpassenFachfelder;
 window.fuehreBerechnungAus = fuehreBerechnungAus;
+window.checkForUpdatesManual = checkForUpdatesManual;
 
