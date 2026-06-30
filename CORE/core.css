@@ -373,24 +373,23 @@ hr {
     margin-bottom: 20px;
 }
 /* ==========================================
-   SPACE-LILA FLIMMERN / PULSIEREN EFFECT
+   ELEGANTES SPACE-NEBEL PULSIEREN (BEREINIGT)
    ========================================== */
 
-/* Diese Animation lässt die Hintergrundfarbe sanft flimmern */
-@keyframes spaceFlicker {
+@keyframes spaceGlow {
     0% {
-        background-color: #0d0b21; /* Sehr dunkles Space-Blau/Schwarz */
+        background-color: #0b091a; /* Sehr tiefes, edles Dunkelblau/Schwarz als Basis */
     }
     50% {
-        background-color: #2e1a47; /* Helles, leuchtendes Space-Lila */
+        background-color: #1e1135; /* Sanfter Übergang in dein edles Space-Lila */
     }
     100% {
-        background-color: #0d0b21;
+        background-color: #0d1b3a; /* Sanfter Übergang in blau */
     }
 }
 
-/* Wendet die Animation auf die gesamte App an */
+/* Wendet das ruhige Pulsieren elegant auf die App an */
 body {
-    animation: spaceFlicker 3s infinite ease-in-out;
-    transition: background-color 0.5s ease;
+    animation: spaceGlow 12s infinite alternate ease-in-out;
+    transition: background-color 1.5s ease;
 }
