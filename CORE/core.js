@@ -1711,25 +1711,27 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 // ==========================================
 // MANUELLES UPDATE-TRIGGERSYSTEM (REPARIERT)
 // ==========================================
-// ==========================================
-// MANUELLES UPDATE-TRIGGERSYSTEM (KORRIGIERT)
-// ==========================================
 window.checkForUpdatesManual = function() {
-    text.innerText = 'Suche nach Updates gestartet...';
-    btn.style.display = 'none';
+    // Hier holen wir uns die Elemente direkt aus deinem HTML
+    const popup = document.getElementById('update-popup') || document.getElementById('update-card');
+    const text = document.getElementById('update-text') || document.getElementById('update-message');
+    const btn = document.getElementById('update-btn') || document.getElementById('update-button');
+
+    // Sicherheitscheck: Falls die Elemente im HTML existieren, steuern wir sie an
+    if (text) text.innerText = 'Suche nach Updates gestartet...';
+    if (btn) btn.style.display = 'none';
+    if (popup) popup.style.display = 'block'; // Falls es ein Popup ist, blenden wir es ein
 
     if ('serviceWorker' in navigator) {
-        // Zwingt das Handy auch beim manuellen Klick, den Server direkt zu fragen
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then(() => navigator.serviceWorker.ready)
             .then(registration => {
                 return registration.update().then(() => {
                     // FALL 1: Ein neues Update wartet auf Aktivierung
                     if (registration.waiting) {
-                        text.innerText = 'Update gefunden! Die App wird neu geladen...';
-                        btn.style.display = 'none';
+                        if (text) text.innerText = 'Update gefunden! Die App wird neu geladen...';
+                        if (btn) btn.style.display = 'none';
                         
-                        // Schmeißt den alten Service Worker sofort raus
                         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                         
                         setTimeout(() => {
@@ -1738,34 +1740,40 @@ window.checkForUpdatesManual = function() {
                     } 
                     // FALL 2: Kein Update vorhanden
                     else {
-                        text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
-                        btn.innerText = 'Schließen';
-                        btn.style.display = 'block';
-                        btn.onclick = () => {
-                            popup.style.display = 'none';
-                        };
+                        if (text) text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
+                        if (btn) {
+                            btn.innerText = 'Schließen';
+                            btn.style.display = 'block';
+                            btn.onclick = () => {
+                                if (popup) popup.style.display = 'none';
+                            };
+                        }
                     }
                 });
             })
             .catch(error => {
                 console.error('Fehler bei manuellen Update-Check:', error);
-                text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
-                btn.innerText = 'Schließen';
-                btn.style.display = 'block';
-                btn.onclick = () => {
-                    popup.style.display = 'none';
-                };
+                if (text) text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
+                if (btn) {
+                    btn.innerText = 'Schließen';
+                    btn.style.display = 'block';
+                    btn.onclick = () => {
+                        if (popup) popup.style.display = 'none';
+                    };
+                }
             });
     } else {
-        // Das ist dein ursprünglicher Else-Block für Browser ohne Service Worker
-        text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
-        btn.innerText = 'Schließen';
-        btn.style.display = 'block';
-        btn.onclick = () => {
-            popup.style.display = 'none';
-        };
+        if (text) text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
+        if (btn) {
+            btn.innerText = 'Schließen';
+            btn.style.display = 'block';
+            btn.onclick = () => {
+                if (popup) popup.style.display = 'none';
+            };
+        }
     }
 };
+
 
 
 // ==========================================
