@@ -5,11 +5,12 @@ import { initStundenplan } from '../Extensions/Stundenplan/stundenplan.js';
 // ==========================================
 let deferredPrompt; 
 
-let infoTexts = {
-    "klassen-page": "",
-    "rechner-page": "",
-    "match-page": "",
-    "noten-page": ""
+// Korrigierte Infotexte für die Apps (Eindeutige Texte für jede ID)
+const infoTexts = {
+    "klassen-page": "Hier findest du die Übersicht der Verteilungs-Werkzeuge. Wähle entweder den Wahrscheinlichkeitsrechner oder den Matchpartner-Finder, um deine Analysen zu starten.",
+    "rechner-page": "Dieser Rechner ermöglicht es dir, mit Hilfe von komplexen mathematischen Systemen, eine ungefähre Wahrscheinlichkeit für das Zusammenkommen mit einer anderen Person in der 11. Klasse zu berechnen. Das Ergebnis wird genauer, wenn ebenfalls die Wunschpartner der Zielperson angegeben werden.",
+    "match-page": "Mit dem „Matchpartner-Finder“ kannst du direkt zwei verschiedene Personen miteinander vergleichen, um mathematisch zu sehen, mit wem deine Chancen auf eine gemeinsame Klasse höher stehen.",
+    "noten-page": "Hier kannst du deine Noten für die hessische Mittelstufe (1-6) oder Oberstufe (0-15 Punkte) verwalten. Nutze den Rechner für aktuelle Stände oder den Planer für Wunschnoten."
 };
 let aktuelleGeoeffneteApp = "";
 
@@ -1078,25 +1079,15 @@ const translations = {
 };
 
 function applyLanguage(lang) {
-    const langData = translations[lang] || translations['en'];
-    
+    const langData = translations[lang];
+    if (!langData) return;
+
     for (const [id, text] of Object.entries(langData)) {
         const element = document.getElementById(id);
         if (element) {
-            if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
-                element.placeholder = text;
-            } else {
-                element.innerText = text;
-            }
+            element.innerText = text;
         }
     }
-
-    infoTexts["klassen-page"] = langData["info-klassen"] || langData["info-fallback"];
-    infoTexts["rechner-page"] = langData["info-klassen"] || langData["info-fallback"];
-    infoTexts["match-page"] = langData["info-match"] || langData["info-fallback"];
-    infoTexts["noten-page"] = langData["info-noten"] || langData["info-fallback"];
-    
-    anpassenFachfelder(); 
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1105,7 +1096,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const landing = document.getElementById('landing-page');
     const dash = document.getElementById('dashboard-page');
     
-    initStundenplan();
+    // Fehlerabsicherung, falls das Modul auf bestimmten Seiten nicht existiert
+    try { 
+        initStundenplan(); 
+    } catch(e) { 
+        console.error("Stundenplan konnte nicht initialisiert werden:", e); 
+    }
+    
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
 
@@ -1121,26 +1118,112 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (typeof setStufe === 'function') { setStufe('mittel'); }
-
-    const savedLang = localStorage.getItem('littleUncle_lang') || 'en';
-    if (document.getElementById('settings-lang')) {
-        document.getElementById('settings-lang').value = savedLang;
+    if (typeof setStufe === 'function') {
+        setStufe('mittel');
     }
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Installation: ${outcome}`);
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            } else {
+                switchToRealAppMode();
+            }
+        });
+    }
+
+    const savedLang = localStorage.getItem('littleUncle_lang') || 'de';
+    const savedRegion = localStorage.getItem('littleUncle_region');
+    
+    const langSelect = document.getElementById('settings-lang');
+    if (langSelect) { langSelect.value = savedLang; }
+    
+    const regionSelect = document.getElementById('settings-region');
+    if (savedRegion && regionSelect) { regionSelect.value = savedRegion; }
+    
     applyLanguage(savedLang);
 });
 
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) {
+        installBtn.style.display = 'block';
+    }
+});
+
+function switchToRealAppMode() {
+    const landing = document.getElementById('landing-page');
+    if (landing) { landing.style.display = 'none'; landing.classList.remove('active'); }
+    const dash = document.getElementById('dashboard-page');
+    if (dash) { dash.style.display = 'block'; dash.classList.add('active'); }
+}
+
 // ==========================================
-// NAVIGATION & HEADER LOGIK
+// INFO-DRAWER STEUERUNG
+// ==========================================
+function toggleInfo(show) {
+    const drawer = document.getElementById('info-drawer');
+    const textEl = document.getElementById('info-drawer-text');
+    if (!drawer || !textEl) return;
+
+    if (show === false || (show === undefined && drawer.style.left === '0px')) {
+        drawer.style.left = '-300px';
+    } else {
+        textEl.innerText = infoTexts[aktuelleGeoeffneteApp] || "Keine zusätzlichen Informationen für diese Ansicht verfügbar.";
+        drawer.style.left = '0px';
+    }
+}
+
+// ==========================================
+// EINSTELLUNGEN-STEUERUNG (ZAHNRAD)
+// ==========================================
+function toggleSettings(show) {
+    const overlay = document.getElementById('settings-overlay');
+    if (!overlay) return;
+
+    if (show) {
+        overlay.classList.add('active');
+    } else {
+        overlay.classList.remove('active');
+        const langSelect = document.getElementById('settings-lang');
+        const regionSelect = document.getElementById('settings-region');
+        
+        const langVal = langSelect ? langSelect.value : 'de';
+        const regionVal = regionSelect ? regionSelect.value : '';
+        
+        localStorage.setItem('littleUncle_lang', langVal);
+        localStorage.setItem('littleUncle_region', regionVal);
+        applyLanguage(langVal);
+    }
+}
+
+// ==========================================
+// NAVIGATIONSSYSTEM
 // ==========================================
 function openApp(appId) {
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
         tab.style.display = 'none';
     });
+    
     const target = document.getElementById(appId);
-    if (target) { target.classList.add('active'); target.style.display = 'block'; }
-    aktuelleGeoeffneteApp = (appId === 'klassen-page') ? 'rechner-page' : appId;
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+    }
+
+    if (appId === 'klassen-page') {
+        aktuelleGeoeffneteApp = 'rechner-page'; 
+    } else {
+        aktuelleGeoeffneteApp = appId;
+    }
+    
     const infoBtn = document.getElementById('info-btn');
     if (infoBtn) infoBtn.style.visibility = 'visible';
 }
@@ -1150,11 +1233,18 @@ function goBackToDashboard() {
         tab.classList.remove('active');
         tab.style.display = 'none';
     });
+    
     const dash = document.getElementById('dashboard-page');
-    if (dash) { dash.classList.add('active'); dash.style.display = 'block'; }
+    if (dash) {
+        dash.classList.add('active');
+        dash.style.display = 'block';
+    }
+
     aktuelleGeoeffneteApp = "";
+    
     const infoBtn = document.getElementById('info-btn');
     if (infoBtn) infoBtn.style.visibility = 'hidden';
+    
     toggleInfo(false);
 }
 window.goBackToDashboard = goBackToDashboard;
@@ -1164,56 +1254,36 @@ function switchSubTab(subPageId) {
         tab.classList.remove('active');
         tab.style.display = 'none';
     });
+    
     const target = document.getElementById(subPageId);
-    if (target) { target.classList.add('active'); target.style.display = 'block'; }
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+    }
+    
     aktuelleGeoeffneteApp = subPageId;
+
     const btnRechner = document.getElementById('btn-sub-rechner');
     const btnMatch = document.getElementById('btn-sub-match');
+    
     if (btnRechner) btnRechner.classList.toggle('active', subPageId === 'rechner-page');
     if (btnMatch) btnMatch.classList.toggle('active', subPageId === 'match-page');
 }
 
 // ==========================================
-// INFOPANEL & SETTINGS
-// ==========================================
-function toggleInfo(show) {
-    const drawer = document.getElementById('info-drawer');
-    const textEl = document.getElementById('info-drawer-text');
-    if (!drawer || !textEl) return;
-    if (show === false || (show === undefined && drawer.style.left === '0px')) {
-        drawer.style.left = '-300px';
-    } else {
-        const savedLang = localStorage.getItem('littleUncle_lang') || 'en';
-        textEl.innerText = infoTexts[aktuelleGeoeffneteApp] || translations[savedLang]["info-fallback"];
-        drawer.style.left = '0px';
-    }
-}
-
-function toggleSettings(show) {
-    const overlay = document.getElementById('settings-overlay');
-    if (!overlay) return;
-    if (show) {
-        overlay.classList.add('active');
-    } else {
-        overlay.classList.remove('active');
-        const langVal = document.getElementById('settings-lang').value;
-        localStorage.setItem('littleUncle_lang', langVal);
-        applyLanguage(langVal);
-    }
-}
-
-// ==========================================
-// MATHEMATISCHER KLASSEN-ALGORITHMUS
+// KLASSEN-ALGORITHMUS
 // ==========================================
 function berechneKernWahrscheinlichkeit(meinGeschlecht, meineKlasse, meineWuensche, zielGeschlecht, zielKlasse, zielClique) {
     let chance = 0.20;
     let anzahlAlteKlasse = 0;
     let anzahlMaenner = 0;
     let anzahlFrauen = 0;
+
     let meineGruppeNurMaenner = (meinGeschlecht === 'M');
     let meineGruppeNurFrauen = (meinGeschlecht === 'F');
     let zielGruppeNurMaenner = (zielGeschlecht === 'M');
     let zielGruppeNurFrauen = (zielGeschlecht === 'F');
+
     let klassenSet = new Set();
     klassenSet.add(meineKlasse);
 
@@ -1240,37 +1310,46 @@ function berechneKernWahrscheinlichkeit(meinGeschlecht, meineKlasse, meineWuensc
 
     let anzahlBeteiligtePersonen = 1 + meineWuensche.length + 1 + zielClique.length;
     let einzigartigeKlassenZahl = klassenSet.size;
+
     if (einzigartigeKlassenZahl >= 3) chance *= 1.55; 
     else if (einzigartigeKlassenZahl === 1 && anzahlBeteiligtePersonen > 1) chance *= 0.70; 
+
     if (meinGeschlecht !== zielGeschlecht) chance *= 1.35; else chance *= 0.85;
     if (anzahlAlteKlasse > 1) chance *= Math.pow(0.85, anzahlAlteKlasse - 1);
+
     let gesamtPersonen = anzahlMaenner + anzahlFrauen;
     if (anzahlMaenner / gesamtPersonen > 0.7) chance *= 0.65;
-    if ((meineGruppeNurMaenner && zielGruppeNurFrauen) || (meineGruppeNurFrauen && zielGruppeNurMaenner)) chance *= 1.60;
+
+    if ((meineGruppeNurMaenner && zielGruppeNurFrauen) || (meineGruppeNurFrauen && zielGruppeNurMaenner)) {
+        chance *= 1.60;
+    }
+
     if (anzahlAlteKlasse > 10) return -1; 
 
     let endChance = chance * 0.98;
     if (endChance > 0.98) endChance = 0.98;
     if (endChance < 0.01) endChance = 0.01;
+
     return endChance;
 }
 
 function berechneRechner() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
-
-    const meinGeschlecht = document.getElementById("meinGeschlecht").value;
-    const meineKlasse = document.getElementById("meineKlasse").value;
-    const zielGeschlecht = document.getElementById("zielGeschlecht").value;
-    const zielKlasse = document.getElementById("zielKlasse").value;
+    const meinGeschlecht = document.getElementById("meinGeschlecht")?.value || "M";
+    const meineKlasse = document.getElementById("meineKlasse")?.value || "10A";
+    const zielGeschlecht = document.getElementById("zielGeschlecht")?.value || "F";
+    const zielKlasse = document.getElementById("zielKlasse")?.value || "10A";
 
     const meineWuensche = [];
-    if (document.getElementById("wunsch1_G").value) meineWuensche.push({ G: document.getElementById("wunsch1_G").value, klasse: document.getElementById("wunsch1_klasse").value });
-    if (document.getElementById("wunsch2_G").value) meineWuensche.push({ G: document.getElementById("wunsch2_G").value, klasse: document.getElementById("wunsch2_klasse").value });
+    const w1_G = document.getElementById("wunsch1_G")?.value;
+    if (w1_G) meineWuensche.push({ G: w1_G, klasse: document.getElementById("wunsch1_klasse")?.value });
+    const w2_G = document.getElementById("wunsch2_G")?.value;
+    if (w2_G) meineWuensche.push({ G: w2_G, klasse: document.getElementById("wunsch2_klasse")?.value });
 
     const zielClique = [];
-    if (document.getElementById("clique1_G").value) zielClique.push({ G: document.getElementById("clique1_G").value, klasse: document.getElementById("clique1_klasse").value });
-    if (document.getElementById("clique2_G").value) zielClique.push({ G: document.getElementById("clique2_G").value, klasse: document.getElementById("clique2_klasse").value });
+    const c1_G = document.getElementById("clique1_G")?.value;
+    if (c1_G) zielClique.push({ G: c1_G, klasse: document.getElementById("clique1_klasse")?.value });
+    const c2_G = document.getElementById("clique2_G")?.value;
+    if (c2_G) zielClique.push({ G: c2_G, klasse: document.getElementById("clique2_klasse")?.value });
 
     const ergebnis = berechneKernWahrscheinlichkeit(meinGeschlecht, meineKlasse, meineWuensche, zielGeschlecht, zielKlasse, zielClique);
 
@@ -1279,13 +1358,15 @@ function berechneRechner() {
     const resTxt = document.getElementById("rechner-result-text");
     const simBox = document.getElementById("rechner-simulator-box");
 
+    if (!resBox || !resVal || !resTxt) return;
+
     if (ergebnis < 0) {
-        resTxt.innerText = langData["text-hint"];
-        resVal.innerText = langData["text-more-than-10"];
+        resTxt.innerText = "Hinweis:";
+        resVal.innerText = "0.00% (Über 10 Personen aus alter Klasse!)";
         resVal.style.color = "#dc2626";
-        simBox.style.display = "none";
+        if (simBox) simBox.style.display = "none";
     } else {
-        resTxt.innerText = langData["text-probability-is"];
+        resTxt.innerText = "Die Wahrscheinlichkeit beträgt:";
         resVal.innerText = (ergebnis * 100).toFixed(2) + "%";
         resVal.style.color = "var(--cyber-cyan)";
 
@@ -1295,33 +1376,33 @@ function berechneRechner() {
         zielClique.forEach(c => { if(zielKlasse === meineKlasse && c.klasse === meineKlasse) anzahlAlte++; });
 
         const neueKlassen = ["11A", "11B", "11C", "11D", "11E"];
-        let sim3 = langData["text-class-sim-3"].replace("{anzahl}", anzahlAlte);
-        
-        document.getElementById("rechner-simulator-content").innerHTML = 
-            `${langData["text-class-sim-1"]} <span style="color:var(--space-purple-glow); font-weight:700;">${neueKlassen[Math.floor(Math.random()*5)]}</span>.<br>` +
-            `${langData["text-class-sim-2"]}<br>` +
-            `<strong>${sim3}</strong>`;
-        simBox.style.display = "block";
+        const simContent = document.getElementById("rechner-simulator-content");
+        if (simContent) {
+            simContent.innerHTML = 
+                `Du wirst voraussichtlich in die neue Klasse <span style="color:var(--space-purple-glow); font-weight:700;">${neueKlassen[Math.floor(Math.random()*5)]}</span> kommen.<br>` +
+                `Dort werden exakt <strong>14 Jungs</strong> und <strong>14 Mädchen</strong> sein.<br>` +
+                `Von deiner alten Klasse (<strong>${meineKlasse.toUpperCase()}</strong>) kommen genau <strong>${anzahlAlte} Personen</strong> mit dir.`;
+        }
+        if (simBox) simBox.style.display = "block";
     }
     resBox.style.display = "block";
 }
 
 function berechneMatchpartner() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
+    const meinG = document.getElementById("matchMeinG")?.value || "M";
+    const meineKlasse = document.getElementById("matchMeineKlasse")?.value || "10A";
 
-    const meinG = document.getElementById("matchMeinG").value;
-    const meineKlasse = document.getElementById("matchMeineKlasse").value;
-
-    const persA_G = document.getElementById("persA_G").value;
-    const persA_klasse = document.getElementById("persA_klasse").value;
+    const persA_G = document.getElementById("persA_G")?.value || "F";
+    const persA_klasse = document.getElementById("persA_klasse")?.value || "10A";
     const cliqueA = [];
-    if (document.getElementById("persAClique_G").value) cliqueA.push({ G: document.getElementById("persAClique_G").value, klasse: document.getElementById("persAClique_klasse").value });
+    const cA_G = document.getElementById("persAClique_G")?.value;
+    if (cA_G) cliqueA.push({ G: cA_G, klasse: document.getElementById("persAClique_klasse")?.value });
 
-    const persB_G = document.getElementById("persB_G").value;
-    const persB_klasse = document.getElementById("persB_klasse").value;
+    const persB_G = document.getElementById("persB_G")?.value || "F";
+    const persB_klasse = document.getElementById("persB_klasse")?.value || "10B";
     const cliqueB = [];
-    if (document.getElementById("persBClique_G").value) cliqueB.push({ G: document.getElementById("persBClique_G").value, klasse: document.getElementById("persBClique_klasse").value });
+    const cB_G = document.getElementById("persBClique_G")?.value;
+    if (cB_G) cliqueB.push({ G: cB_G, klasse: document.getElementById("persBClique_klasse")?.value });
 
     let ergA = berechneKernWahrscheinlichkeit(meinG, meineKlasse, [], persA_G, persA_klasse, cliqueA);
     let ergB = berechneKernWahrscheinlichkeit(meinG, meineKlasse, [], persB_G, persB_klasse, cliqueB);
@@ -1329,37 +1410,44 @@ function berechneMatchpartner() {
     const matchBox = document.getElementById("match-result-box");
     const matchContent = document.getElementById("match-result-content");
 
-    let textA = ergA < 0 ? langData["text-rule-violation"] : (ergA * 100).toFixed(2) + "%";
-    let textB = ergB < 0 ? langData["text-rule-violation"] : (ergB * 100).toFixed(2) + "%";
+    if (!matchBox || !matchContent) return;
 
-    let gewinner = langData["text-tie"];
-    if (ergA > ergB) gewinner = langData["text-winner-a"];
-    else if (ergB > ergA) gewinner = langData["text-winner-b"];
+    let textA = ergA < 0 ? "Regelverstoß (0.00%)" : (ergA * 100).toFixed(2) + "%";
+    let textB = ergB < 0 ? "Regelverstoß (0.00%)" : (ergB * 100).toFixed(2) + "%";
+
+    let gewinner = "Gleichstand oder unmöglich";
+    if (ergA > ergB) gewinner = "👑 Vergleichsperson A ist der bessere Matchpartner!";
+    else if (ergB > ergA) gewinner = "👑 Vergleichsperson B ist der bessere Matchpartner!";
 
     matchContent.innerHTML = 
-        `${langData["text-chance-with"]} <strong>Vergleichsperson A:</strong> <span style="color:var(--space-purple-glow); font-weight:700;">${textA}</span><br>` +
-        `${langData["text-chance-with"]} <strong>Vergleichsperson B:</strong> <span style="color:var(--cyber-cyan); font-weight:700;">${textB}</span><br><br>` +
+        `Chance mit <strong>Vergleichsperson A:</strong> <span style="color:var(--space-purple-glow); font-weight:700;">${textA}</span><br>` +
+        `Chance mit <strong>Vergleichsperson B:</strong> <span style="color:var(--cyber-cyan); font-weight:700;">${textB}</span><br><br>` +
         `<span style="font-size:16px; font-weight:800; color:var(--text-pure); display:block; text-align:center;">${gewinner}</span>`;
 
     matchBox.style.display = "block";
 }
 
 // ==========================================
-// NOTEN- & WUNSCHPLANER SYSTEM
+// HESSISCHER NOTEN- & WUNSCHPLANER-CODE
 // ==========================================
+let aktuelleStufe = "mittel"; 
+let aktuellerModus = "rechner"; 
+
 const notenListe = [
-    { text: "1", val: 1.0 }, { text: "1-", val: 1.33 }, { text: "2+", val: 1.67 }, { text: "2", val: 2.0 }, 
-    { text: "2-", val: 2.33 }, { text: "3+", val: 2.67 }, { text: "3", val: 3.0 }, { text: "3-", val: 3.33 },
-    { text: "4+", val: 3.67 }, { text: "4", val: 4.0 }, { text: "4-", val: 4.33 }, { text: "5+", val: 4.67 }, 
-    { text: "5", val: 5.0 }, { text: "5-", val: 5.33 }, { text: "6", val: 6.0 }
+    { text: "Bitte wählen...", val: "" }, { text: "1", val: 1.0 }, { text: "1-", val: 1.33 },
+    { text: "2+", val: 1.67 }, { text: "2", val: 2.0 }, { text: "2-", val: 2.33 },
+    { text: "3+", val: 2.67 }, { text: "3", val: 3.0 }, { text: "3-", val: 3.33 },
+    { text: "4+", val: 3.67 }, { text: "4", val: 4.0 }, { text: "4-", val: 4.33 },
+    { text: "5+", val: 4.67 }, { text: "5", val: 5.0 }, { text: "5-", val: 5.33 }, { text: "6", val: 6.0 }
 ];
 
 const punkteListe = [
-    { text: "15 (1+)", val: 0.67 }, { text: "14 (1)", val: 1.0 }, { text: "13 (1-)", val: 1.33 },
-    { text: "12 (2+)", val: 1.67 }, { text: "11 (2)", val: 2.0 }, { text: "10 (2-)", val: 2.33 },
-    { text: "09 (3+)", val: 2.67 }, { text: "08 (3)", val: 3.0 }, { text: "07 (3-)", val: 3.33 },
-    { text: "06 (4+)", val: 3.67 }, { text: "05 (4)", val: 4.0 }, { text: "04 (4-)", val: 4.33 },
-    { text: "03 (5+)", val: 4.67 }, { text: "02 (5)", val: 5.0 }, { text: "01 (5-)", val: 5.33 }, { text: "00 (6)", val: 6.0 }
+    { text: "Bitte wählen...", val: "" },
+    { text: "15 Punkte (1+)", val: 0.67 }, { text: "14 Punkte (1)", val: 1.0 }, { text: "13 Punkte (1-)", val: 1.33 },
+    { text: "12 Punkte (2+)", val: 1.67 }, { text: "11 Punkte (2)", val: 2.0 }, { text: "10 Punkte (2-)", val: 2.33 },
+    { text: "09 Punkte (3+)", val: 2.67 }, { text: "08 Punkte (3)", val: 3.0 }, { text: "07 Punkte (3-)", val: 3.33 },
+    { text: "06 Punkte (4+)", val: 3.67 }, { text: "05 Punkte (4)", val: 4.0 }, { text: "04 Punkte (4-)", val: 4.33 },
+    { text: "03 Punkte (5+)", val: 4.67 }, { text: "02 Punkte (5)", val: 5.0 }, { text: "01 Punkt (5-)", val: 5.33 }, { text: "00 Punkte (6)", val: 6.0 }
 ];
 
 function setStufe(stufe) {
@@ -1368,47 +1456,83 @@ function setStufe(stufe) {
     const bo = document.getElementById("btn-ober");
     if(bm) bm.classList.toggle("active", stufe === "mittel");
     if(bo) bo.classList.toggle("active", stufe === "ober");
-    if(document.getElementById("feedbackCard")) document.getElementById("feedbackCard").style.display = "none";
+    
+    const fc = document.getElementById("feedbackCard");
+    if(fc) fc.style.display = "none";
+    
+    const fachTyp = document.getElementById("fachTyp");
+    if(!fachTyp) return;
+    fachTyp.innerHTML = "";
+
+    if (stufe === "mittel") {
+        fachTyp.options.add(new Option("Hauptfach (50% Mündlich / 2x 25% Arbeiten)", "haupt"));
+        fachTyp.options.add(new Option("Nebenfach (66.67% Mündlich / 1x 33.33% Arbeit)", "neben"));
+        befuelleDropdowns(notenListe);
+    } else {
+        fachTyp.options.add(new Option("Leistungskurs / Hauptfach (50% Mündlich / 2x 25% Klausuren)", "haupt"));
+        fachTyp.options.add(new Option("Grundkurs / Nebenfach (66.67% Mündlich / 1x 33.33% Klausur)", "neben"));
+        befuelleDropdowns(punkteListe);
+    }
+    
+    const wunschSelect = document.getElementById("wunschNote");
+    if(wunschSelect) {
+        wunschSelect.innerHTML = "";
+        const aktuelleWunschListe = (stufe === "mittel") ? notenListe : punkteListe;
+        aktuelleWunschListe.forEach(item => { wunschSelect.options.add(new Option(item.text, item.val)); });
+    }
     setModus(aktuellerModus);
 }
 
 function setModus(modus) {
     aktuellerModus = modus;
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
-
     const br = document.getElementById("btn-rechner");
     const bp = document.getElementById("btn-planer");
     if(br) br.classList.toggle("active", modus === "rechner");
     if(bp) bp.classList.toggle("active", modus === "planer");
     
-    if(document.getElementById("feedbackCard")) document.getElementById("feedbackCard").style.display = "none";
+    const fc = document.getElementById("feedbackCard");
+    if(fc) fc.style.display = "none";
 
     const isPlaner = (modus === "planer");
-    if(document.getElementById("wunsch-group")) document.getElementById("wunsch-group").style.display = isPlaner ? "block" : "none";
-    if(document.getElementById("vorher-group")) document.getElementById("vorher-group").style.display = isPlaner ? "none" : "block";
+    const wg = document.getElementById("wunsch-group");
+    const vg = document.getElementById("vorher-group");
+    if(wg) wg.style.display = isPlaner ? "block" : "none";
+    if(vg) vg.style.display = isPlaner ? "none" : "block";
     
-    if(document.getElementById("noten-main-title")) document.getElementById("noten-main-title").innerText = isPlaner ? langData["noten-title-plan"] : langData["noten-title-calc"];
-    if(document.getElementById("noten-main-sub")) document.getElementById("noten-main-sub").innerText = isPlaner ? langData["noten-sub-plan"] : langData["noten-sub-calc"];
-    if(document.getElementById("calcBtn")) document.getElementById("calcBtn").innerText = isPlaner ? langData["btn-plan-label"] : langData["btn-calc-label"];
+    const mt = document.getElementById("noten-main-title");
+    const ms = document.getElementById("noten-main-sub");
+    const cb = document.getElementById("calcBtn");
+    if(mt) mt.innerText = isPlaner ? "Der Wunschnoten-Planer" : "Der Noten-Rechner";
+    if(ms) ms.innerText = isPlaner ? "Welche Noten brauchst du noch?" : "Berechne deine exakte hessische Zeugnisnote.";
+    if(cb) cb.innerText = isPlaner ? "Kombinationen berechnen" : "Note berechnen";
 
     anpassenFachfelder();
 }
 
+function befuelleDropdowns(liste) {
+    ["noteMuendlich", "noteArbeit1", "noteArbeit2", "vorherigeNote"].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.innerHTML = "";
+            liste.forEach(item => { el.options.add(new Option(item.text, item.val)); });
+        }
+    });
+}
+
 function anpassenFachfelder() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
     const ftEl = document.getElementById("fachTyp");
     if(!ftEl) return;
     const fachTyp = ftEl.value;
+    const arbeit2Group = document.getElementById("arbeit2-group");
+    const arbeit1Label = document.getElementById("arbeit1-label");
     const isPlaner = (aktuellerModus === "planer");
 
     if (fachTyp === "neben") {
-        if(document.getElementById("arbeit2-group")) document.getElementById("arbeit2-group").style.display = "none";
-        if(document.getElementById("arbeit1-label")) document.getElementById("arbeit1-label").innerText = isPlaner ? langData["label-work1-plan"] : langData["label-work1-calc"];
+        if(arbeit2Group) arbeit2Group.style.display = "none";
+        if(arbeit1Label) arbeit1Label.innerText = isPlaner ? "Klassenarbeit (Optional):" : "Klassenarbeit:";
     } else {
-        if(document.getElementById("arbeit2-group")) document.getElementById("arbeit2-group").style.display = "block";
-        if(document.getElementById("arbeit1-label")) document.getElementById("arbeit1-label").innerText = isPlaner ? langData["label-work1-plan-haupt"] : langData["label-work1-calc-haupt"];
+        if(arbeit2Group) arbeit2Group.style.display = "block";
+        if(arbeit1Label) arbeit1Label.innerText = isPlaner ? "1. Arbeit (Optional):" : "1. Klassenarbeit:";
     }
 }
 
@@ -1427,28 +1551,28 @@ function fuehreBerechnungAus() {
     else berechneWunschKombinationen();
 }
 
+// ==========================================
+// NOTEN-BERECHNUNG
+// ==========================================
 function berechneZeugnisnote() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
+    const fachTyp = document.getElementById("fachTyp")?.value || "haupt";
+    const muendlich = document.getElementById("noteMuendlich")?.value || "";
+    const arbeit1 = document.getElementById("noteArbeit1")?.value || "";
+    const vorherigeRaw = document.getElementById("vorherigeNote")?.value || "";
 
-    const fachTyp = document.getElementById("fachTyp").value;
-    const muendlich = document.getElementById("noteMuendlich").value;
-    const arbeit1 = document.getElementById("noteArbeit1").value;
-    const vorherigeRaw = document.getElementById("vorherigeNote").value;
-
-    if (muendlich === "" || arbeit1 === "") { alert(langData["alert-select-grades"]); return; }
+    if (muendlich === "" || arbeit1 === "") { alert("Bitte wähle mindestens mündlich und die erste Arbeit."); return; }
     const mVal = parseFloat(muendlich); const a1Val = parseFloat(arbeit1); let schnitt = 0;
 
     if (fachTyp === "haupt") {
-        const arbeit2 = document.getElementById("noteArbeit2").value;
-        if (arbeit2 === "") { alert(langData["alert-select-exam2"]); return; }
+        const arbeit2 = document.getElementById("noteArbeit2")?.value || "";
+        if (arbeit2 === "") { alert("Bitte wähle auch die 2. Arbeit aus."); return; }
         schnitt = (mVal * 0.5) + (((a1Val + parseFloat(arbeit2)) / 2) * 0.5);
     } else {
         schnitt = (mVal * (2/3)) + (a1Val * (1/3));
     }
 
     let endanzeige = "";
-    let hinweis = langData["schnitt-at"].replace("{schnitt}", schnitt.toFixed(2));
+    let hinweis = `Schnitt liegt bei <strong>${schnitt.toFixed(2)}</strong>.`;
     let farbKategorie = 3; 
 
     if (aktuelleStufe === "mittel") {
@@ -1456,13 +1580,8 @@ function berechneZeugnisnote() {
         const nachkomma = schnitt - Math.floor(schnitt);
         if (Math.abs(nachkomma - 0.5) < 0.03 && vorherigeRaw !== "") {
             const vVal = parseFloat(vorherigeRaw);
-            if (Math.ceil(schnitt) > Math.round(vVal)) { 
-                endnote = Math.ceil(schnitt); 
-                hinweis = langData["trend-down"].replace("{grade}", endnote); 
-            } else { 
-                endnote = Math.floor(schnitt); 
-                hinweis = langData["trend-up"].replace("{grade}", endnote); 
-            }
+            if (Math.ceil(schnitt) > Math.round(vVal)) { endnote = Math.ceil(schnitt); hinweis = `Trend nach unten. Lehrer tendiert meist zu Note <strong>${endnote}</strong>.`; }
+            else { endnote = Math.floor(schnitt); hinweis = `Trend nach oben! Wahrscheinlich kriegst du Note <strong>${endnote}</strong>.`; }
         }
         endanzeige = "Note " + endnote; farbKategorie = endnote;
     } else {
@@ -1471,35 +1590,34 @@ function berechneZeugnisnote() {
     }
 
     styleFeedbackCard(farbKategorie);
-    document.getElementById("res-card-title").innerText = langData["res-title-calc"];
-    document.getElementById("gradeOutput").innerText = endanzeige;
-    document.getElementById("descOutput").innerHTML = hinweis;
+    if(document.getElementById("res-card-title")) document.getElementById("res-card-title").innerText = "Errechnetes Zeugnis-Ergebnis";
+    if(document.getElementById("gradeOutput")) document.getElementById("gradeOutput").innerText = endanzeige;
+    if(document.getElementById("descOutput")) document.getElementById("descOutput").innerHTML = hinweis;
     if(document.getElementById("empfehlungOutput")) document.getElementById("empfehlungOutput").style.display = "none";
-    document.getElementById("feedbackCard").style.display = "block";
+    if(document.getElementById("feedbackCard")) document.getElementById("feedbackCard").style.display = "block";
 }
 
 function berechneWunschKombinationen() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
-
-    const wunsch = document.getElementById("wunschNote").value;
-    if(wunsch === "") { alert(langData["alert-select-target"]); return; }
+    const wunsch = document.getElementById("wunschNote")?.value || "";
+    if(wunsch === "") { alert("Bitte wähle eine Wunschnote aus!"); return; }
     const zielDezimal = parseFloat(wunsch);
-    const wunschText = document.getElementById("wunschNote").options[document.getElementById("wunschNote").selectedIndex].text;
-    const fachTyp = document.getElementById("fachTyp").value;
-    const mSel = document.getElementById("noteMuendlich").value;
-    const a1Sel = document.getElementById("noteArbeit1").value;
-    const a2Sel = document.getElementById("noteArbeit2").value;
+    const wunschSelect = document.getElementById("wunschNote");
+    const wunschText = wunschSelect ? wunschSelect.options[wunschSelect.selectedIndex].text : "";
+    const fachTyp = document.getElementById("fachTyp")?.value || "haupt";
+    const mSel = document.getElementById("noteMuendlich")?.value || "";
+    const a1Sel = document.getElementById("noteArbeit1")?.value || "";
+    const a2Sel = document.getElementById("noteArbeit2")?.value || "";
 
     const pool = (aktuelleStufe === "mittel") ? notenListe : punkteListe;
+    const optionen = pool.filter(o => o.val !== "");
     let guetigeKombis = [];
 
-    pool.forEach(oM => {
+    optionen.forEach(oM => {
         if(mSel !== "" && Math.abs(parseFloat(mSel) - oM.val) > 0.01) return;
-        pool.forEach(oA1 => {
+        optionen.forEach(oA1 => {
             if(a1Sel !== "" && Math.abs(parseFloat(a1Sel) - oA1.val) > 0.01) return;
             if(fachTyp === "haupt") {
-                pool.forEach(oA2 => {
+                optionen.forEach(oA2 => {
                     if(a2Sel !== "" && Math.abs(parseFloat(a2Sel) - oA2.val) > 0.01) return;
                     let schnitt = (oM.val * 0.5) + (((oA1.val + oA2.val) / 2) * 0.5);
                     if(Math.abs(schnitt - zielDezimal) < 0.025) guetigeKombis.push({ m: oM.text, a1: oA1.text, a2: oA2.text });
@@ -1515,92 +1633,43 @@ function berechneWunschKombinationen() {
     const gradeOut = document.getElementById("gradeOutput");
     const descOut = document.getElementById("descOutput");
 
-    document.getElementById("res-card-title").innerText = langData["res-title-plan"];
-    gradeOut.innerText = langData["target-label"] + wunschText;
+    if(document.getElementById("res-card-title")) document.getElementById("res-card-title").innerText = "Mögliche Noten-Wege";
+    if(gradeOut) gradeOut.innerText = "Ziel: " + wunschText;
 
     if(guetigeKombis.length === 0) {
-        descOut.innerHTML = langData["target-unreachable"];
+        if(descOut) descOut.innerHTML = "❌ Dieses exakte Ziel ist mathematisch leider nicht mehr erreichbar.";
         styleFeedbackCard(5);
     } else {
         styleFeedbackCard(2);
         let html = "<ul>";
         guetigeKombis.slice(0, 5).forEach(k => {
-            html += fachTyp === "haupt" ? 
-                `<li>${langData["list-oral"]}<strong>${k.m}</strong>${langData["list-exam1"]}<strong>${k.a1}</strong>${langData["list-exam2"]}<strong>${k.a2}</strong></li>` : 
-                `<li>${langData["list-oral"]}<strong>${k.m}</strong>${langData["list-exam"]}<strong>${k.a1}</strong></li>`;
+            html += fachTyp === "haupt" ? `<li>Mündlich: <strong>${k.m}</strong> | 1.Arbeit: <strong>${k.a1}</strong> | 2.Arbeit: <strong>${k.a2}</strong></li>` : `<li>Mündlich: <strong>${k.m}</strong> | Arbeit: <strong>${k.a1}</strong></li>`;
         });
-        html += "</ul>"; descOut.innerHTML = html;
+        html += "</ul>"; 
+        if(descOut) descOut.innerHTML = html;
     }
-    card.style.display = "block";
+    if(card) card.style.display = "block";
 }
 
 function styleFeedbackCard(kat) {
+    const gradeOut = document.getElementById("gradeOutput");
     if (kat <= 2) {
         document.documentElement.style.setProperty('--status-bg', 'rgba(16, 185, 129, 0.08)');
         document.documentElement.style.setProperty('--status-border', 'rgba(16, 185, 129, 0.3)');
         document.documentElement.style.setProperty('--status-text', '#34d399');
-        if(document.getElementById("gradeOutput")) document.getElementById("gradeOutput").style.color = "#34d399";
+        if(gradeOut) gradeOut.style.color = "#34d399";
     } else if (kat === 3 || kat === 4) {
         document.documentElement.style.setProperty('--status-bg', 'rgba(99, 102, 241, 0.08)');
         document.documentElement.style.setProperty('--status-border', 'rgba(99, 102, 241, 0.3)');
         document.documentElement.style.setProperty('--status-text', '#a5b4fc');
-        if(document.getElementById("gradeOutput")) document.getElementById("gradeOutput").style.color = "var(--cyber-cyan)";
+        if(gradeOut) gradeOut.style.color = "var(--cyber-cyan)";
     } else {
         document.documentElement.style.setProperty('--status-bg', 'rgba(239, 68, 68, 0.08)');
         document.documentElement.style.setProperty('--status-border', 'rgba(239, 68, 68, 0.3)');
         document.documentElement.style.setProperty('--status-text', '#f87171');
-        if(document.getElementById("gradeOutput")) document.getElementById("gradeOutput").style.color = "#f87171";
+        if(gradeOut) gradeOut.style.color = "#f87171";
     }
 }
-
-// ==========================================
-// MANUELLES UPDATE-SYSTEM
-// ==========================================
-window.checkForUpdatesManual = function() {
-    const lang = localStorage.getItem('littleUncle_lang') || 'en';
-    const langData = translations[lang] || translations['en'];
-
-    const popup = document.getElementById('update-popup') || document.getElementById('popup') || { style: {} };
-    const text = document.getElementById('update-text') || document.getElementById('text') || { style: {} };
-    const btn = document.getElementById('update-btn') || document.getElementById('btn') || { style: {} };
-
-    if(popup.style) popup.style.display = 'flex';
-    text.innerText = langData["update-start"];
-    btn.style.display = 'none';
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-            return registration.update().then(() => {
-                if (registration.waiting) {
-                    text.innerText = langData["update-found"];
-                    btn.style.display = 'none';
-                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    setTimeout(() => { window.location.reload(true); }, 1200);
-                } else {
-                    text.innerText = langData["update-latest"];
-                    btn.innerText = langData["btn-close"];
-                    btn.style.display = 'block';
-                    btn.onclick = () => { if(popup.style) popup.style.display = 'none'; };
-                }
-            }).catch(() => {
-                text.innerText = langData["update-error"];
-                btn.innerText = langData["btn-close"];
-                btn.style.display = 'block';
-                btn.onclick = () => { if(popup.style) popup.style.display = 'none'; };
-            });
-        }).catch(() => {
-            text.innerText = langData["update-not-ready"];
-            btn.innerText = langData["btn-close"];
-            btn.style.display = 'block';
-            btn.onclick = () => { if(popup.style) popup.style.display = 'none'; };
-        });
-    } else {
-        text.innerText = langData["update-not-supported"];
-        btn.innerText = langData["btn-close"];
-        btn.style.display = 'block';
-        btn.onclick = () => { if(popup.style) popup.style.display = 'none'; };
-    }
-};
 
 // ==========================================
 // AUTOMATISCHES HINTERGRUND-UPDATE-SYSTEM
@@ -1609,16 +1678,24 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
             .then((registration) => {
+                console.log('Service Worker erfolgreich registriert.');
                 registration.update();
+
                 registration.onupdatefound = () => {
                     const installingWorker = registration.installing;
                     if (installingWorker == null) return;
+
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('Neuer Code erkannt! SKIP_WAITING wird gesendet...');
                             installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                            alert('App hat ein Update gefunden und lädt jetzt neu!');
                         }
                     };
                 };
+            })
+            .catch((error) => {
+                console.error('Fehler beim Service Worker Update-Check:', error);
             });
     });
 }
@@ -1631,15 +1708,75 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
     }
 });
 
+// ==========================================
+// MANUELLES UPDATE-TRIGGERSYSTEM (REPARIERT)
+// ==========================================
+window.checkForUpdatesManual = function() {
+    const popup = document.getElementById('update-popup') || document.getElementById('popup');
+    const text = document.getElementById('update-text') || document.getElementById('text');
+    const btn = document.getElementById('update-btn') || document.getElementById('btn');
+
+    if(text) text.innerText = 'Suche nach Updates gestartet...';
+    if(btn) btn.style.display = 'none';
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+            .then(() => navigator.serviceWorker.ready)
+            .then(registration => {
+                return registration.update().then(() => {
+                    if (registration.waiting) {
+                        if(text) text.innerText = 'Update gefunden! Die App wird neu geladen...';
+                        if(btn) btn.style.display = 'none';
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        setTimeout(() => { window.location.reload(true); }, 1200);
+                    } else {
+                        if(text) text.innerText = 'Deine App ist bereits auf dem neuesten Stand! ✓';
+                        if(btn) {
+                            btn.innerText = 'Schließen';
+                            btn.style.display = 'block';
+                            btn.onclick = () => { if(popup) popup.style.display = 'none'; };
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Fehler bei manuellen Update-Check:', error);
+                if(text) text.innerText = 'Fehler bei der Update-Suche auf dem Server.';
+                if(btn) {
+                    btn.innerText = 'Schließen';
+                    btn.style.display = 'block';
+                    btn.onclick = () => { if(popup) popup.style.display = 'none'; };
+                }
+            });
+    } else {
+        if(text) text.innerText = 'Updates werden von diesem Browser nicht unterstützt.';
+        if(btn) {
+            btn.innerText = 'Schließen';
+            btn.style.display = 'block';
+            btn.onclick = () => { if(popup) popup.style.display = 'none'; };
+        }
+    }
+};
+
+// ==========================================
+// ERWEITERUNGS-SYSTEM
+// ==========================================
 function erweiterungLaden(ordnerName) {
     import(`../Extensions/${ordnerName}/extension.js`)
-        .then(modul => { modul.starten(); })
-        .catch(() => {});
+        .then(modul => {
+            if(modul && modul.starten) modul.starten();
+        })
+        .catch(fehler => {
+            console.log(`Hinweis: Die Erweiterung "${ordnerName}" ist nicht aktiv oder fehlt.`);
+        });
 }
+
 erweiterungLaden('Extension1');
 
+// Globale Bereitstellung
 window.toggleInfo = toggleInfo;
 window.toggleSettings = toggleSettings;
+window.switchToRealAppMode = switchToRealAppMode;
 window.openApp = openApp;
 window.switchSubTab = switchSubTab;
 window.berechneRechner = berechneRechner;
