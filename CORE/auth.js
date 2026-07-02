@@ -51,7 +51,7 @@ window.executeAuth = async function() {
 
 // Funktion zum Öffnen des Fensters aus dem Zahnrad-Menü
 window.openAuthOverlay = function() {
-    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('auth-overlay').style.setProperty('display', 'flex', 'important');
 };
 
 // ==========================================
