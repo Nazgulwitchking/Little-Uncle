@@ -19,7 +19,7 @@ window.executeAuth = async function() {
         return;
     }
 
-    const endpoint = isRegisterMode ? 'http://localhost:3000/api/register' : 'http://localhost:3000/api/login';
+    const endpoint = isRegisterMode ? 'https://little-uncle.onrender.com/api/register' : 'https://little-uncle.onrender.com/api/login';
 
     try {
         const response = await fetch(endpoint, {
@@ -86,7 +86,7 @@ localStorage.setItem = function(key, value) {
         }
 
         // Wir senden das gesamte Datenpaket gesammelt an den Server
-        fetch('http://localhost:3000/api/save-all-data', {
+        fetch('/https://little-uncle.onrender.comapi/save-all-data', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
