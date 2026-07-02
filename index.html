@@ -506,7 +506,28 @@
             <button id="update-modal-btn" class="update-btn-ok" data-translate="btn_ok" style="display: none;">OK</button>
         </div>
     </div>
-
+    <script src="CORE/auth.js"></script>
     <script type="module" src="CORE/core.js"></script>
+<div id="auth-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #09090b; z-index: 200000; display: flex; justify-content: center; align-items: center;">
+    <div class="card" style="width: 90%; max-width: 360px; text-align: center; padding: 30px; background: #1e1e1e; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+        <h2 id="auth-title" style="color: white; margin-bottom: 20px;">Anmelden bei Little Uncle</h2>
+        
+        <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+            <label style="color: #a5b4fc;">Benutzername / E-Mail:</label>
+            <input type="text" id="auth-username" style="width: 100%; padding: 12px; background: #27272a; border: 1px solid #3f3f46; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+            <label style="color: #a5b4fc;">Passwort:</label>
+            <input type="password" id="auth-password" style="width: 100%; padding: 12px; background: #27272a; border: 1px solid #3f3f46; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+
+        <button id="btn-auth-primary" class="btn" style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; width: 100%; font-weight: bold;" onclick="executeAuth()">Einloggen</button>
+        
+        <p id="auth-switch-text" style="color: var(--text-muted); font-size: 14px; margin-top: 15px; cursor: pointer;" onclick="toggleAuthMode()">Noch kein Konto? Jetzt registrieren</p>
+        <p id="auth-error" style="color: #f87171; font-size: 14px; margin-top: 10px; display: none;"></p>
+    </div>
+</div>
+
 </body>
 </html>
