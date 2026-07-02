@@ -1,4 +1,4 @@
-const CACHE_NAME = 'little-uncle-cache-v4-auto';
+const CACHE_NAME = 'little-uncle-cache-v5-auto';
 
 // ALLE wichtigen Dateien mit den EXAKTEN Pfaden für den Offline-Modus
 const ASSETS = [
