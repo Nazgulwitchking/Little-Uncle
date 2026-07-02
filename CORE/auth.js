@@ -1,5 +1,6 @@
 let isRegisterMode = false;
-let currentToken = null;
+// Holt den Token aus dem Speicher, falls er existiert (Automatischer Login beim Start)
+let currentToken = localStorage.getItem('authToken') || null;
 
 window.toggleAuthMode = function() {
     isRegisterMode = !isRegisterMode;
@@ -31,12 +32,12 @@ window.executeAuth = async function() {
         const data = await response.json();
 
         if (response.ok) {
-            currentToken = data.token; // Merken uns den Login-Token
-            document.getElementById('auth-overlay').style.display = 'none'; // App freischalten!
+            currentToken = data.token; 
+            localStorage.setItem('authToken', data.token); // Token im Browser merken!
+            document.getElementById('auth-overlay').style.display = 'none'; // Fenster schließt sich!
             
-            // Hier laden wir gleich die Daten des Nutzers aus der Datenbank
             if(data.userdata) {
-                applyUserBackendData(data.userdata);
+                window.applyAllUserBackendData(data.userdata);
             }
         } else {
             errorEl.innerText = data.error || "Fehler beim Login.";
@@ -48,34 +49,26 @@ window.executeAuth = async function() {
     }
 };
 
-// Diese Funktion gibt die geladenen Daten sicher an deine bestehenden Systeme weiter
-function applyUserBackendData(userdata) {
-    if(userdata.timetable) {
-        localStorage.setItem('littleUncle_timetable', JSON.stringify(userdata.timetable));
-        // Falls der Stundenplan offen ist, wird er aktualisiert
-        if(typeof initStundenplan === 'function') initStundenplan();
-    }
-    // Hier können später auch Noten eingetragen werden
-}
+// Funktion zum Öffnen des Fensters aus dem Zahnrad-Menü
+window.openAuthOverlay = function() {
+    document.getElementById('auth-overlay').style.display = 'flex';
+};
+
 // ==========================================
 // AUTOMATISCHES BACKEND-SYNCHRONISATIONS-SYSTEM
 // ==========================================
 
-// Wir merken uns die originale Speicher-Funktion des Browsers
 const originalSetItem = localStorage.setItem;
 
-// Wir überschreiben sie mit einer intelligenten Weiche
 localStorage.setItem = function(key, value) {
-    // 1. Zuerst ganz normal lokal im Browser speichern (damit die App wie gewohnt läuft)
+    // 1. Immer lokal auf dem Handy speichern
     originalSetItem.apply(this, arguments);
 
-    // 2. WICHTIG: Wenn der User eingeloggt ist, schicken wir JEDE Änderung an den Server
-    if (window.currentToken) {
-        // Wir holen alle Daten, die aktuell im LocalStorage liegen
+    // 2. Nur an den Server senden, wenn ein Token existiert
+    if (currentToken && key !== 'authToken') {
         const allUserData = {};
         for (let i = 0; i < localStorage.length; i++) {
             const localKey = localStorage.key(i);
-            // Wir filtern nach deinen App-Daten (falls andere Webseiten auch was speichern)
             if (localKey.startsWith('littleUncle_') || localKey.includes('timetable') || localKey.includes('noten')) {
                 try {
                     allUserData[localKey] = JSON.parse(localStorage.getItem(localKey));
@@ -85,12 +78,12 @@ localStorage.setItem = function(key, value) {
             }
         }
 
-        // Wir senden das gesamte Datenpaket gesammelt an den Server
-        fetch('/https://little-uncle.onrender.comapi/save-all-data', {
+        // URL korrigiert!
+        fetch('https://little-uncle.onrender.com/api/save-all-data', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': window.currentToken
+                'Authorization': currentToken
             },
             body: JSON.stringify({ userData: allUserData })
         })
@@ -98,17 +91,14 @@ localStorage.setItem = function(key, value) {
     }
 };
 
-// Diese Funktion lädt beim Login ALLE Daten wieder zurück in den Speicher
 window.applyAllUserBackendData = function(allUserData) {
     if (!allUserData) return;
     
-    // Wir gehen alle gespeicherten Keys durch und klatschen sie in den lokalen Speicher
     Object.keys(allUserData).forEach(key => {
         const val = allUserData[key];
         const stringVal = (typeof val === 'object') ? JSON.stringify(val) : val;
         originalSetItem.call(localStorage, key, stringVal);
     });
 
-    // Seite einmal sanft neu laden, damit alle UI-Komponenten (Stundenplan, Noten) die neuen Daten sehen
     window.location.reload();
 };
