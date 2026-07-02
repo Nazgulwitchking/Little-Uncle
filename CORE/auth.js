@@ -2,6 +2,14 @@ let isRegisterMode = false;
 // Holt den Token aus dem Speicher, falls er existiert (Automatischer Login beim Start)
 let currentToken = localStorage.getItem('authToken') || null;
 
+// Automatischer Start-Check: Wenn ein Token existiert, Overlay sofort ausblenden
+window.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('auth-overlay');
+    if (currentToken && overlay) {
+        overlay.style.setProperty('display', 'none', 'important');
+    }
+});
+
 window.toggleAuthMode = function() {
     isRegisterMode = !isRegisterMode;
     document.getElementById('auth-title').innerText = isRegisterMode ? 'Konto erstellen' : 'Anmelden bei Little Uncle';
